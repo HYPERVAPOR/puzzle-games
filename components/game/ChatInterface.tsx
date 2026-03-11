@@ -90,7 +90,11 @@ export function ChatInterface({ onSendMessage, disabled = false, className }: Ch
 
       {/* 悬浮输入框 */}
       <div className="max-w-3xl mx-auto">
-        <div className="relative bg-zinc-900/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-zinc-800/50">
+        <div className={cn(
+          "relative backdrop-blur-xl rounded-3xl shadow-2xl border transition-colors duration-300",
+          "bg-zinc-900/80 dark:bg-zinc-900/80 bg-white/80",
+          "border-zinc-800/50 dark:border-zinc-800/50 border-zinc-300/50"
+        )}>
           <textarea
             ref={textareaRef}
             value={message}
@@ -102,7 +106,7 @@ export function ChatInterface({ onSendMessage, disabled = false, className }: Ch
             className={cn(
               "w-full px-5 py-4 pr-14",
               "min-h-[56px] max-h-[200px]",
-              "bg-transparent text-sm text-zinc-100 placeholder-zinc-500",
+              "bg-transparent text-sm text-zinc-100 dark:text-zinc-100 text-zinc-900 placeholder-zinc-500 dark:placeholder-zinc-500 placeholder-zinc-400",
               "focus:outline-none focus:ring-0 focus:shadow-none focus:border-0 resize-none",
               "disabled:opacity-50 disabled:cursor-not-allowed",
               "transition-all duration-300 ease-out"
@@ -122,7 +126,7 @@ export function ChatInterface({ onSendMessage, disabled = false, className }: Ch
             className={cn(
               "absolute right-3 bottom-3",
               "p-2.5",
-              "text-zinc-400 hover:text-emerald-400",
+              "text-zinc-400 dark:text-zinc-400 text-zinc-600 hover:text-emerald-400",
               "disabled:opacity-30 disabled:cursor-not-allowed",
               "transition-all duration-300 ease-out",
               "flex items-center justify-center"

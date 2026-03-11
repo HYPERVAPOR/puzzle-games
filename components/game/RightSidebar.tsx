@@ -46,19 +46,20 @@ function CollapsibleSection({
   children,
 }: CollapsibleSectionProps) {
   return (
-    <div className="border-b border-zinc-800/50 last:border-b-0">
+    <div className="border-b border-zinc-800/50 dark:border-zinc-800/50 border-zinc-200/50 last:border-b-0 transition-colors duration-300">
       {/* Header */}
       <button
         onClick={onToggle}
         className="w-full p-4 flex items-center justify-between
-                   hover:bg-zinc-800/30 transition-colors duration-200"
+                   hover:bg-zinc-800/30 dark:hover:bg-zinc-800/30 hover:bg-zinc-200/30
+                   transition-colors duration-200"
       >
         <div className="flex items-center gap-2">
           {icon}
-          <h2 className="text-sm font-semibold text-zinc-100">
+          <h2 className="text-sm font-semibold text-zinc-100 dark:text-zinc-100 text-zinc-900 transition-colors duration-300">
             {title}
           </h2>
-          <span className="text-xs text-zinc-500">
+          <span className="text-xs text-zinc-500 dark:text-zinc-500 text-zinc-600 transition-colors duration-300">
             {count}
           </span>
         </div>
@@ -66,7 +67,7 @@ function CollapsibleSection({
           animate={{ rotate: isExpanded ? 90 : 0 }}
           transition={{ duration: 0.3, ease: 'easeInOut' }}
         >
-          <ChevronRight className="w-4 h-4 text-zinc-500" />
+          <ChevronRight className="w-4 h-4 text-zinc-500 dark:text-zinc-500 text-zinc-600 transition-colors duration-300" />
         </motion.div>
       </button>
 
@@ -138,7 +139,12 @@ export function RightSidebar({ users, currentUserId, clues, roomId, theme, toggl
   return (
     <div
       ref={sidebarRef}
-      className={cn("h-full flex bg-zinc-900/30 border-r border-zinc-800/50 relative", className)}
+      className={cn(
+        "h-full flex border-r relative transition-colors duration-300",
+        "bg-zinc-900/30 dark:bg-zinc-900/30 bg-zinc-100/30",
+        "border-zinc-800/50 dark:border-zinc-800/50 border-zinc-200/50",
+        className
+      )}
       style={{ width: `${width}px`, minWidth: `${MIN_WIDTH}px`, maxWidth: `${MAX_WIDTH}px` }}
     >
       {/* 拖拽手柄 */}
@@ -171,8 +177,8 @@ export function RightSidebar({ users, currentUserId, clues, roomId, theme, toggl
         >
           {users.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
-              <Users className="w-10 h-10 text-zinc-700 mb-3" />
-              <p className="text-sm text-zinc-500">
+              <Users className="w-10 h-10 text-zinc-700 dark:text-zinc-700 text-zinc-400 mb-3 transition-colors duration-300" />
+              <p className="text-sm text-zinc-500 dark:text-zinc-500 text-zinc-600 transition-colors duration-300">
                 暂无在线用户
               </p>
             </div>
@@ -186,7 +192,7 @@ export function RightSidebar({ users, currentUserId, clues, roomId, theme, toggl
                     "transition-all duration-200",
                     user.id === currentUserId
                       ? "bg-emerald-500/10 border border-emerald-500/20"
-                      : "hover:bg-zinc-800/50"
+                      : "hover:bg-zinc-800/50 dark:hover:bg-zinc-800/50 hover:bg-zinc-200/50"
                   )}
                 >
                   {/* Avatar */}
@@ -200,10 +206,10 @@ export function RightSidebar({ users, currentUserId, clues, roomId, theme, toggl
 
                   {/* Username - 强制换行 */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-zinc-300 break-words">
+                    <p className="text-sm text-zinc-300 dark:text-zinc-300 text-zinc-700 break-words transition-colors duration-300">
                       {user.username}
                       {user.id === currentUserId && (
-                        <span className="ml-1.5 text-xs text-zinc-500">(你)</span>
+                        <span className="ml-1.5 text-xs text-zinc-500 dark:text-zinc-500 text-zinc-600 transition-colors duration-300">(你)</span>
                       )}
                     </p>
                   </div>
@@ -223,8 +229,8 @@ export function RightSidebar({ users, currentUserId, clues, roomId, theme, toggl
         >
           {clues.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
-              <Lightbulb className="w-10 h-10 text-zinc-700 mb-3" />
-              <p className="text-sm text-zinc-500">
+              <Lightbulb className="w-10 h-10 text-zinc-700 dark:text-zinc-700 text-zinc-400 mb-3 transition-colors duration-300" />
+              <p className="text-sm text-zinc-500 dark:text-zinc-500 text-zinc-600 transition-colors duration-300">
                 暂无线索
               </p>
             </div>
@@ -236,10 +242,13 @@ export function RightSidebar({ users, currentUserId, clues, roomId, theme, toggl
                   initial={{ opacity: 0, x: 10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.05 }}
-                  className="flex gap-3 p-3 bg-zinc-800/40 rounded-xl
-                              border border-zinc-700/50
-                              hover:bg-zinc-800/60 hover:border-zinc-700/70
-                              transition-all duration-200"
+                  className={cn(
+                    "flex gap-3 p-3 rounded-xl border transition-all duration-200",
+                    "bg-zinc-800/40 dark:bg-zinc-800/40 bg-zinc-200/40",
+                    "border-zinc-700/50 dark:border-zinc-700/50 border-zinc-300/50",
+                    "hover:bg-zinc-800/60 dark:hover:bg-zinc-800/60 hover:bg-zinc-200/60",
+                    "hover:border-zinc-700/70 dark:hover:border-zinc-700/70 hover:border-zinc-300/70"
+                  )}
                 >
                   {/* 序号 */}
                   <div className="flex-shrink-0 w-6 h-6 rounded-full
@@ -250,7 +259,7 @@ export function RightSidebar({ users, currentUserId, clues, roomId, theme, toggl
                   </div>
 
                   {/* 内容 - 强制换行 */}
-                  <p className="flex-1 text-sm text-zinc-300 leading-relaxed break-words">
+                  <p className="flex-1 text-sm text-zinc-300 dark:text-zinc-300 text-zinc-700 leading-relaxed break-words transition-colors duration-300">
                     {clue}
                   </p>
 
@@ -263,12 +272,12 @@ export function RightSidebar({ users, currentUserId, clues, roomId, theme, toggl
         </CollapsibleSection>
 
         {/* 底端按钮区域 */}
-        <div className="mt-auto border-t border-zinc-800/50 p-3">
+        <div className="mt-auto border-t border-zinc-800/50 dark:border-zinc-800/50 border-zinc-200/50 p-3 transition-colors duration-300">
           <div className="flex gap-2">
             {/* 设置按钮 */}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg hover:bg-zinc-800/50 text-zinc-400 hover:text-zinc-300 transition-colors"
+              className="p-2 rounded-lg hover:bg-zinc-800/50 dark:hover:bg-zinc-800/50 hover:bg-zinc-200/50 text-zinc-400 dark:text-zinc-400 text-zinc-600 hover:text-zinc-300 dark:hover:text-zinc-300 hover:text-zinc-800 transition-colors"
               title={theme === 'dark' ? '切换到浅色模式' : '切换到深色模式'}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-settings-icon lucide-settings">
@@ -292,7 +301,7 @@ export function RightSidebar({ users, currentUserId, clues, roomId, theme, toggl
                   setTimeout(() => setCopied(false), 300);
                 });
               }}
-              className="p-2 rounded-lg hover:bg-zinc-800/50 text-zinc-400 hover:text-zinc-300 transition-colors relative"
+              className="p-2 rounded-lg hover:bg-zinc-800/50 dark:hover:bg-zinc-800/50 hover:bg-zinc-200/50 text-zinc-400 dark:text-zinc-400 text-zinc-600 hover:text-zinc-300 dark:hover:text-zinc-300 hover:text-zinc-800 transition-colors relative"
               title="分享房间"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-share-icon lucide-share">
