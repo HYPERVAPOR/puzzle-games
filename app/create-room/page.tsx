@@ -4,36 +4,28 @@
  * 创建房间页面 - 极简版
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function CreateRoomPage() {
   const router = useRouter();
+  const [username, setUsername] = useState('');
   const [roomName, setRoomName] = useState('');
   const [roomPassword, setRoomPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    // 检查是否已登录
-    const userStr = localStorage.getItem('user');
-    if (!userStr) {
-      router.push('/');
-    }
-  }, [router]);
 
   const handleCreateRoom = async () => {
     setError('');
     setIsLoading(true);
 
     try {
-      const userStr = localStorage.getItem('user');
-      if (!userStr) {
-        router.push('/');
+      // 验证用户名必填
+      if (!username.trim()) {
+        setError('请输入用户名');
+        setIsLoading(false);
         return;
       }
-
-      const user = JSON.parse(userStr);
 
       // 验证密码必填
       if (!roomPassword.trim()) {
@@ -49,7 +41,7 @@ export default function CreateRoomPage() {
         body: JSON.stringify({
           roomName: roomName.trim() || undefined,
           roomPassword: roomPassword.trim(),
-          username: user.username,
+          username: username.trim(),
         }),
       });
 
@@ -110,6 +102,22 @@ export default function CreateRoomPage() {
             <div>
               <input
                 type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="用户名"
+                disabled={isLoading}
+                className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl
+                         text-sm text-zinc-100 placeholder-zinc-500
+                         focus:outline-none focus:ring-0 focus:border-zinc-600
+                         disabled:opacity-50 disabled:cursor-not-allowed
+                         transition-all duration-200"
+              />
+            </div>
+
+            <div>
+              <input
+                type="text"
                 value={roomName}
                 onChange={(e) => setRoomName(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -141,7 +149,7 @@ export default function CreateRoomPage() {
 
             <button
               onClick={handleCreateRoom}
-              disabled={isLoading || !roomPassword.trim()}
+              disabled={isLoading || !username.trim() || !roomPassword.trim()}
               className="w-full px-4 py-3 bg-emerald-500 hover:bg-emerald-400
                        text-zinc-950 font-medium rounded-xl
                        disabled:opacity-50 disabled:cursor-not-allowed
