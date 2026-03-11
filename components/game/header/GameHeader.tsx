@@ -7,6 +7,7 @@
 import React from 'react';
 import { Game } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { SettingsMenu } from './SettingsMenu';
 
 interface GameHeaderProps {
   game: Game;
@@ -34,11 +35,11 @@ export function GameHeader({ game, roomName, isConnected }: GameHeaderProps) {
   return (
     <header className="glass-header">
       <div className="px-6 py-3">
-        <div className="flex items-center justify-center">
+        <div className="flex items-center justify-between">
           {/* Center: Room Name + Status Badge */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-1 justify-center">
             <div>
-              <h1 className="text-base font-semibold text-zinc-100 tracking-tight">
+              <h1 className="text-base font-semibold text-zinc-100 dark:text-zinc-100 text-zinc-900 tracking-tight transition-colors duration-300">
                 {roomName}
               </h1>
             </div>
@@ -52,6 +53,11 @@ export function GameHeader({ game, roomName, isConnected }: GameHeaderProps) {
                 {status.text}
               </span>
             )}
+          </div>
+
+          {/* Right: Settings Menu */}
+          <div className="flex-shrink-0">
+            <SettingsMenu />
           </div>
         </div>
       </div>

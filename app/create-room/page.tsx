@@ -71,7 +71,7 @@ export default function CreateRoomPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-zinc-950 dark:bg-zinc-950 bg-zinc-50 flex items-center justify-center p-4 transition-colors duration-300">
       <div className="w-full max-w-md">
         {/* 居中卡片 */}
         <div className="bg-zinc-900/50 backdrop-blur-xl rounded-3xl shadow-2xl border border-zinc-800/50 p-8">

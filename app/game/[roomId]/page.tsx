@@ -503,7 +503,7 @@ export default function GamePage() {
   const isGameFinished = game.status === 'finished';
 
   return (
-    <div className="flex h-screen bg-zinc-950 overflow-hidden">
+    <div className="flex h-screen bg-zinc-950 dark:bg-zinc-950 bg-white overflow-hidden transition-colors duration-300">
       {/* 左侧：在线用户 + 已确认线索 */}
       <RightSidebar
         users={game.users}
