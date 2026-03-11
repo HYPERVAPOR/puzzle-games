@@ -230,7 +230,7 @@ export default function AdminPage() {
                 <textarea
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="例如：恐怖主题、科幻主题、校园主题等"
+                  placeholder="输入具体要求"
                   rows={3}
                   className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
