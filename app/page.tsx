@@ -44,16 +44,6 @@ function HomeContent() {
             </button>
           </div>
         </div>
-
-        {/* 底部链接 */}
-        <div className="text-center mt-6">
-          <a
-            href="/admin"
-            className="text-xs text-zinc-600 hover:text-zinc-500 transition-colors"
-          >
-            管理
-          </a>
-        </div>
       </div>
     </div>
   );
