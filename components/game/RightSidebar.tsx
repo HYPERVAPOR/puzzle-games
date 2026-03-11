@@ -265,7 +265,7 @@ export function RightSidebar({
 
         {/* 内容区域 - 只在展开时显示 */}
         {(!isMobile && !isCollapsed) || isMobile ? (
-          <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
             {/* Users Section */}
             <CollapsibleSection
               title="在线用户"
@@ -282,7 +282,7 @@ export function RightSidebar({
                   </p>
                 </div>
               ) : (
-                <div className="space-y-1">
+                <div className="space-y-1 max-h-60 overflow-y-auto pr-1">
                   {users.map((user) => {
                     const isOwner = ownerId && user.id === ownerId;
                     return (
@@ -356,7 +356,7 @@ export function RightSidebar({
                   </p>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
                   {clues.map((clue, index) => (
                     <div
                       key={index}
