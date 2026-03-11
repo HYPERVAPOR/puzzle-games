@@ -13,7 +13,7 @@ import { ChatInterface } from '@/components/game/ChatInterface';
 import { GameHeader } from '@/components/game/header/GameHeader';
 import { RightSidebar } from '@/components/game/RightSidebar';
 import { PuzzleMessage } from '@/components/game/chat/PuzzleMessage';
-import { Game, Message, User } from '@/lib/types';
+import { Game, Message, User, Room } from '@/lib/types';
 
 export default function GamePage() {
   const router = useRouter();
@@ -23,11 +23,19 @@ export default function GamePage() {
   const [copied, setCopied] = useState(false);
 
   const [game, setGame] = useState<Game | null>(null);
+  const [room, setRoom] = useState<Room | null>(null);
   const [roomName, setRoomName] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [eventSource, setEventSource] = useState<EventSource | null>(null);
+
+  // 房主功能相关状态
+  const [isPuzzleModalOpen, setIsPuzzleModalOpen] = useState(false);
+  const [puzzleSurface, setPuzzleSurface] = useState('');
+  const [puzzleBottom, setPuzzleBottom] = useState('');
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
   const initializedRef = useRef(false); // 标记是否已初始化加载过历史消息
   const messagesLengthRef = useRef(0); // 记录消息数量
   const gameRef = useRef<Game | null>(null); // 用于卸载时的离开事件
@@ -110,11 +118,11 @@ export default function GamePage() {
       }
 
       const game = gameData.data.game;
-      const room = gameData.data.room;
+      const roomInfo = gameData.data.room;
       const gameMessages = game.messages || [];
 
-      localStorage.setItem('currentRoomId', room.id);
-      localStorage.setItem(`room_${room.id}_password`, password);
+      localStorage.setItem('currentRoomId', roomInfo.id);
+      localStorage.setItem(`room_${roomInfo.id}_password`, password);
 
       console.log('[Frontend] Game data received:', {
         gameId: game.id,
@@ -127,7 +135,8 @@ export default function GamePage() {
       });
 
       setGame(game);
-      setRoomName(room.name || roomId);
+      setRoom(roomInfo);
+      setRoomName(roomInfo.name || roomId);
       setMessages(gameMessages);
       initializedRef.current = true;
       messagesLengthRef.current = gameMessages.length;
@@ -328,6 +337,112 @@ export default function GamePage() {
     router.push('/');
   };
 
+  // 检查是否是房主
+  const isRoomOwner = room && currentUser && room.ownerId === currentUser.id;
+
+  // 打开编辑谜题弹窗
+  const handleOpenPuzzleModal = () => {
+    if (game) {
+      setPuzzleSurface(game.puzzle.surface);
+      setPuzzleBottom(game.puzzle.bottom);
+      setIsPuzzleModalOpen(true);
+    }
+  };
+
+  // 更新谜题
+  const handleUpdatePuzzle = async () => {
+    if (!room || !currentUser) return;
+
+    try {
+      const response = await fetch(`/api/rooms/${room.id}/puzzle`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUser.id,
+          surface: puzzleSurface,
+          bottom: puzzleBottom,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setGame(data.data.game);
+        setIsPuzzleModalOpen(false);
+      } else {
+        alert(data.error || '更新失败');
+      }
+    } catch (error) {
+      console.error('Failed to update puzzle:', error);
+      alert('更新失败，请稍后重试');
+    }
+  };
+
+  // AI生成新谜题
+  const handleGeneratePuzzle = async () => {
+    if (!room || !currentUser) return;
+
+    setIsGenerating(true);
+
+    try {
+      const response = await fetch(`/api/rooms/${room.id}/puzzle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUser.id,
+          prompt: aiPrompt || undefined,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setGame(data.data.game);
+        setIsPuzzleModalOpen(false);
+        setAiPrompt('');
+      } else {
+        alert(data.error || '生成失败');
+      }
+    } catch (error) {
+      console.error('Failed to generate puzzle:', error);
+      alert('生成失败，请稍后重试');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // 重开游戏（清空聊天记录，保留用户列表）
+  const handleResetGame = async () => {
+    if (!room || !currentUser) return;
+
+    if (!confirm('确定要重开游戏吗？聊天记录将被清空，但用户列表会保留。')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/rooms/${room.id}/reset`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUser.id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setGame(data.data.game);
+        setMessages([]);
+        messagesLengthRef.current = 0;
+      } else {
+        alert(data.error || '重开失败');
+      }
+    } catch (error) {
+      console.error('Failed to reset game:', error);
+      alert('重开失败，请稍后重试');
+    }
+  };
+
   // 心跳机制 + 页面可见性检测
   useEffect(() => {
     if (!game || !currentUser) return;
@@ -521,11 +636,22 @@ export default function GamePage() {
         {/* 谜面 - 固定在头部下方 */}
         <div className="flex-shrink-0 border-b border-slate-200/90 dark:border-zinc-800/50 transition-colors duration-300">
           <div className="max-w-3xl mx-auto px-6 py-4">
-            <PuzzleMessage
-              surface={game.puzzle.surface}
-              bottom={game.puzzle.bottom}
-              isFinished={game.status === 'finished'}
-            />
+            <div
+              className={isRoomOwner ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}
+              onClick={isRoomOwner ? handleOpenPuzzleModal : undefined}
+              title={isRoomOwner ? '点击编辑谜题' : ''}
+            >
+              <PuzzleMessage
+                surface={game.puzzle.surface}
+                bottom={game.puzzle.bottom}
+                isFinished={game.status === 'finished'}
+              />
+            </div>
+            {isRoomOwner && (
+              <p className="text-xs text-zinc-500 dark:text-zinc-500 mt-2 text-center">
+                点击谜题可编辑
+              </p>
+            )}
           </div>
         </div>
 
@@ -539,12 +665,137 @@ export default function GamePage() {
           />
         </div>
 
-        {/* 输入区域 */}
-        <ChatInterface
-          onSendMessage={handleSendMessage}
-          disabled={isGameFinished}
-        />
+        {/* 输入区域 + 房主控制按钮 */}
+        <div className="flex-shrink-0">
+          {isRoomOwner && (
+            <div className="max-w-3xl mx-auto px-6 py-3 flex justify-end">
+              <button
+                onClick={handleResetGame}
+                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700
+                         text-zinc-200 dark:text-zinc-200 text-sm font-medium rounded-lg
+                         transition-all duration-200"
+              >
+                新的一局
+              </button>
+            </div>
+          )}
+          <ChatInterface
+            onSendMessage={handleSendMessage}
+            disabled={isGameFinished}
+          />
+        </div>
       </div>
+
+      {/* 编辑谜题弹窗 */}
+      {isPuzzleModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-zinc-900 dark:bg-zinc-900 bg-white rounded-2xl shadow-2xl border border-zinc-800 dark:border-zinc-800 border-zinc-200 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            {/* 头部 */}
+            <div className="flex items-center justify-between p-6 border-b border-zinc-800 dark:border-zinc-800 border-zinc-200">
+              <h2 className="text-xl font-semibold text-zinc-100 dark:text-zinc-100 text-zinc-900">
+                编辑谜题
+              </h2>
+              <button
+                onClick={() => setIsPuzzleModalOpen(false)}
+                className="p-2 rounded-lg hover:bg-zinc-800 dark:hover:bg-zinc-800 hover:bg-zinc-200 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400 dark:text-zinc-400 text-zinc-600">
+                  <path d="M18 6 6 18"/><path d="m6 6 18 18"/>
+                </svg>
+              </button>
+            </div>
+
+            {/* 内容 */}
+            <div className="p-6 space-y-6">
+              {/* 手动编辑 */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 dark:text-zinc-300 text-zinc-700 mb-2">
+                    汤面（谜面）
+                  </label>
+                  <textarea
+                    value={puzzleSurface}
+                    onChange={(e) => setPuzzleSurface(e.target.value)}
+                    placeholder="请输入汤面"
+                    rows={4}
+                    className="w-full px-4 py-3 bg-zinc-800 dark:bg-zinc-800 bg-zinc-100
+                             border border-zinc-700 dark:border-zinc-700 border-zinc-300 rounded-xl
+                             text-sm text-zinc-100 dark:text-zinc-100 text-zinc-900
+                             placeholder-zinc-500 dark:placeholder-zinc-500 placeholder-zinc-400
+                             focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500
+                             transition-all duration-200"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-zinc-300 dark:text-zinc-300 text-zinc-700 mb-2">
+                    汤底（谜底）
+                  </label>
+                  <textarea
+                    value={puzzleBottom}
+                    onChange={(e) => setPuzzleBottom(e.target.value)}
+                    placeholder="请输入汤底"
+                    rows={6}
+                    className="w-full px-4 py-3 bg-zinc-800 dark:bg-zinc-800 bg-zinc-100
+                             border border-zinc-700 dark:border-zinc-700 border-zinc-300 rounded-xl
+                             text-sm text-zinc-100 dark:text-zinc-100 text-zinc-900
+                             placeholder-zinc-500 dark:placeholder-zinc-500 placeholder-zinc-400
+                             focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500
+                             transition-all duration-200"
+                  />
+                </div>
+                <button
+                  onClick={handleUpdatePuzzle}
+                  disabled={!puzzleSurface.trim() || !puzzleBottom.trim()}
+                  className="w-full px-4 py-3 bg-emerald-500 hover:bg-emerald-400
+                           text-zinc-950 font-medium rounded-xl
+                           disabled:opacity-50 disabled:cursor-not-allowed
+                           transition-all duration-200"
+                >
+                  保存修改
+                </button>
+              </div>
+
+              {/* 分隔线 */}
+              <div className="border-t border-zinc-800 dark:border-zinc-800 border-zinc-200 pt-6">
+                <div className="text-center mb-4">
+                  <span className="text-sm text-zinc-500 dark:text-zinc-500 text-zinc-400">或</span>
+                </div>
+              </div>
+
+              {/* AI生成 */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-medium text-zinc-300 dark:text-zinc-300 text-zinc-700">
+                  AI生成新谜题
+                </h3>
+                <div>
+                  <textarea
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    placeholder="可选：输入主题提示，如'恐怖主题'、'科幻主题'等"
+                    rows={3}
+                    className="w-full px-4 py-3 bg-zinc-800 dark:bg-zinc-800 bg-zinc-100
+                             border border-zinc-700 dark:border-zinc-700 border-zinc-300 rounded-xl
+                             text-sm text-zinc-100 dark:text-zinc-100 text-zinc-900
+                             placeholder-zinc-500 dark:placeholder-zinc-500 placeholder-zinc-400
+                             focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500
+                             transition-all duration-200"
+                  />
+                </div>
+                <button
+                  onClick={handleGeneratePuzzle}
+                  disabled={isGenerating}
+                  className="w-full px-4 py-3 bg-zinc-700 hover:bg-zinc-600 dark:bg-zinc-700 dark:hover:bg-zinc-600
+                           text-zinc-200 dark:text-zinc-200 font-medium rounded-xl
+                           disabled:opacity-50 disabled:cursor-not-allowed
+                           transition-all duration-200"
+                >
+                  {isGenerating ? '生成中...' : 'AI生成新谜题'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

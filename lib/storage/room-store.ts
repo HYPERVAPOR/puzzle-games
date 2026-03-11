@@ -16,7 +16,8 @@ const roomsCache = new Map<string, Room>();
 export async function createRoom(
   roomName?: string,
   roomPassword?: string,
-  createdBy?: string
+  createdBy?: string,
+  ownerId?: string
 ): Promise<Room> {
   const now = new Date();
   const roomId = nanoid(); // 使用 NanoID 生成唯一 ID
@@ -26,6 +27,7 @@ export async function createRoom(
     name: roomName || '未命名房间',
     password: roomPassword,
     createdBy,
+    ownerId,
     createdAt: now,
     lastActiveAt: now,
     gameCount: 0,
@@ -168,6 +170,7 @@ export async function ensureDefaultRoom(): Promise<Room> {
       name: '默认房间',
       password: defaultPassword,
       createdBy: 'system',
+      ownerId: undefined, // 默认房间没有房主
       createdAt: now,
       lastActiveAt: now,
       gameCount: 0,

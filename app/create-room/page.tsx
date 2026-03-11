@@ -34,6 +34,9 @@ export default function CreateRoomPage() {
         return;
       }
 
+      // 生成用户ID（用于房主识别）
+      const userId = `user-${crypto.randomUUID()}`;
+
       // 创建房间
       const response = await fetch('/api/rooms', {
         method: 'POST',
@@ -42,12 +45,16 @@ export default function CreateRoomPage() {
           roomName: roomName.trim() || undefined,
           roomPassword: roomPassword.trim(),
           username: username.trim(),
+          userId, // 传递用户ID作为房主ID
         }),
       });
 
       const data = await response.json();
 
       if (data.success) {
+        // 保存用户信息到 localStorage
+        localStorage.setItem('userId', userId);
+        localStorage.setItem('username', username.trim());
         // 保存房间信息到 localStorage（用于分享功能）
         localStorage.setItem('currentRoomId', data.data.room.id);
         localStorage.setItem(`room_${data.data.room.id}_password`, roomPassword.trim());

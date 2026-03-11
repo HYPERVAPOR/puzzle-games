@@ -54,7 +54,8 @@ export interface Room {
   id: string;  // NanoID 生成的唯一标识，如 "V1StGXR8_Z5jdHi6B-myT"
   name: string;  // 房间名称，用户自定义
   password?: string;  // 房间口令（可选），加入时需要验证
-  createdBy?: string;  // 创建者
+  createdBy?: string;  // 创建者用户名
+  ownerId?: string;  // 创建者用户ID
   createdAt: Date;
   lastActiveAt: Date;  // 最后活跃时间
   gameCount: number;  // 房间内游戏局数

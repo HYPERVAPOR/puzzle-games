@@ -36,7 +36,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { roomName, roomPassword, username } = body;
+    const { roomName, roomPassword, username, userId } = body;
 
     if (!username || typeof username !== 'string') {
       return NextResponse.json(
@@ -52,8 +52,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 创建房间（NanoID 自动生成）
-    const room = await createRoom(roomName, roomPassword.trim(), username);
+    // 创建房间（NanoID 自动生成，userId作为房主ID）
+    const room = await createRoom(roomName, roomPassword.trim(), username, userId);
 
     // 创建该房间的第一个游戏
     const game = await getOrCreateActiveGame(room.id);
