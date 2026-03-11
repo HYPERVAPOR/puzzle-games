@@ -21,13 +21,7 @@ export function PuzzleMessage({ surface, bottom, isFinished }: PuzzleMessageProp
   return (
     <div className="mb-6">
       {/* Puzzle Content */}
-      <div
-        onClick={(e) => {
-          // 阻止事件冒泡，避免触发外层的编辑弹窗
-          e.stopPropagation();
-        }}
-        className="text-center"
-      >
+      <div className="text-center">
         <p className={cn(
           "text-sm leading-relaxed whitespace-pre-wrap transition-colors duration-300",
           "text-slate-700 dark:text-zinc-300",
