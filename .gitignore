@@ -42,6 +42,9 @@ yarn-error.log*
 # logs directory
 /logs/
 
+# test files (may contain sensitive data)
+test-*.mjs
+
 # vercel
 .vercel
 
