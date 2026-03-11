@@ -41,9 +41,15 @@ export function ChatInterface({
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
-      textarea.style.height = 'auto';
-      const newHeight = Math.min(Math.max(textarea.scrollHeight, 56), 200);
-      textarea.style.height = `${newHeight}px`;
+      // 只在有内容时才自动调整高度，避免初始高度异常
+      if (message.trim()) {
+        textarea.style.height = 'auto';
+        const newHeight = Math.min(Math.max(textarea.scrollHeight, 56), 200);
+        textarea.style.height = `${newHeight}px`;
+      } else {
+        // 空内容时重置为最小高度
+        textarea.style.height = '56px';
+      }
     }
   }, [message]);
 

@@ -20,33 +20,45 @@ export function PuzzleMessage({ surface, bottom, isFinished }: PuzzleMessageProp
 
   return (
     <div className="mb-6">
-      {/* Header - Always Visible */}
+      {/* Puzzle Content */}
       <div
-        onClick={() => shouldCollapse && setIsExpanded(!isExpanded)}
-        className={cn(
-          "transition-colors",
-          shouldCollapse && "cursor-pointer"
-        )}
+        onClick={(e) => {
+          // 阻止事件冒泡，避免触发外层的编辑弹窗
+          e.stopPropagation();
+        }}
+        className="text-center"
       >
-        {/* Expand/Collapse Icon - Top Right */}
-        {shouldCollapse && (
-          <div className="flex justify-end mb-2">
-            <button className="text-slate-500 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300 transition-colors">
-              {isExpanded ? (
-                <ChevronUp className="w-5 h-5" />
-              ) : (
-                <ChevronDown className="w-5 h-5" />
-              )}
-            </button>
-          </div>
-        )}
-
-        {/* Puzzle Content */}
-        <p className="text-sm text-slate-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap transition-colors duration-300 text-center">
-          {shouldCollapse && !isExpanded
-            ? surface.substring(0, 150) + '...'
-            : surface}
+        <p className={cn(
+          "text-sm leading-relaxed whitespace-pre-wrap transition-colors duration-300",
+          "text-slate-700 dark:text-zinc-300",
+          // 移动端：长文本折叠显示两行
+          shouldCollapse && !isExpanded && "line-clamp-2"
+        )}>
+          {surface}
         </p>
+
+        {/* 展开/收起按钮 - 在内容末尾 */}
+        {shouldCollapse && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsExpanded(!isExpanded);
+            }}
+            className="mt-2 text-sm text-slate-500 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300 transition-colors duration-200 font-medium inline-flex items-center gap-1"
+          >
+            {isExpanded ? (
+              <>
+                收起
+                <ChevronUp className="w-4 h-4" />
+              </>
+            ) : (
+              <>
+                展开
+                <ChevronDown className="w-4 h-4" />
+              </>
+            )}
+          </button>
+        )}
       </div>
 
       {/* Answer (汤底) - Only if finished */}
