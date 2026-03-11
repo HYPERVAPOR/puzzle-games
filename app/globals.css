@@ -2,19 +2,19 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #f5f7fb;
-  --foreground: #111827;
+  --background: #09090b;
+  --foreground: #fafafa;
 
-  /* Light theme */
-  --color-bg-primary: #f5f7fb;
-  --color-bg-secondary: #ffffff;
-  --color-bg-tertiary: #eef2f7;
-  --color-bg-elevated: #ffffff;
-  --color-border: #d7dee8;
-  --color-border-subtle: #d7dee880;
-  --color-text-primary: #111827;
-  --color-text-secondary: #475569;
-  --color-text-muted: #64748b;
+  /* Dark theme (default) */
+  --color-bg-primary: #09090b;
+  --color-bg-secondary: #18181b;
+  --color-bg-tertiary: #27272a;
+  --color-bg-elevated: #18181b;
+  --color-border: #27272a;
+  --color-border-subtle: #27272a80;
+  --color-text-primary: #fafafa;
+  --color-text-secondary: #a1a1aa;
+  --color-text-muted: #71717a;
 
   /* Accent Colors - Subtle & Professional */
   --color-accent: #10b981;          /* emerald-500 (primary) */
@@ -32,18 +32,19 @@
   --font-mono: 'Geist Mono', 'JetBrains Mono', 'Fira Code', monospace;
 }
 
-html.dark {
-  --background: #09090b;
-  --foreground: #fafafa;
-  --color-bg-primary: #09090b;
-  --color-bg-secondary: #18181b;
-  --color-bg-tertiary: #27272a;
-  --color-bg-elevated: #18181b;
-  --color-border: #27272a;
-  --color-border-subtle: #27272a80;
-  --color-text-primary: #fafafa;
-  --color-text-secondary: #a1a1aa;
-  --color-text-muted: #71717a;
+/* Light theme */
+html:not(.dark) {
+  --background: #f5f7fb;
+  --foreground: #111827;
+  --color-bg-primary: #f5f7fb;
+  --color-bg-secondary: #ffffff;
+  --color-bg-tertiary: #eef2f7;
+  --color-bg-elevated: #ffffff;
+  --color-border: #d7dee8;
+  --color-border-subtle: #d7dee880;
+  --color-text-primary: #111827;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748b;
 }
 
 html {
