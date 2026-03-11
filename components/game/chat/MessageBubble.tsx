@@ -74,7 +74,7 @@ export function AIMessage({ content, aiResponse, timestamp }: AIMessageProps) {
         </div>
 
         {/* Message - No avatar */}
-        <div className="text-sm text-zinc-300 dark:text-zinc-300 text-zinc-700 leading-relaxed whitespace-pre-wrap transition-colors duration-300">
+        <div className="text-sm text-zinc-100 dark:text-zinc-100 text-zinc-900 leading-relaxed whitespace-pre-wrap transition-colors duration-300">
           {content}
         </div>
       </div>
