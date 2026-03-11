@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getRoom } from '@/lib/storage/room-store';
-import { getGame, changePuzzle } from '@/lib/game/game-manager';
+import { getGame, changePuzzle, getOrCreateActiveGame } from '@/lib/game/game-manager';
 import { generatePuzzle } from '@/lib/game/ai-service';
 import { broadcastToGame } from '@/lib/game/event-dispatcher';
 
@@ -59,13 +59,11 @@ export async function PUT(
       );
     }
 
-    // 获取当前游戏
-    const game = await getGame(room.currentGameId || '');
+    // 获取或创建当前游戏
+    let game = getGame(room.currentGameId || '');
     if (!game) {
-      return NextResponse.json(
-        { success: false, error: '游戏不存在' },
-        { status: 404 }
-      );
+      // 如果游戏不存在，创建一个新游戏
+      game = await getOrCreateActiveGame(roomId);
     }
 
     // 换题
@@ -122,13 +120,11 @@ export async function POST(
       );
     }
 
-    // 获取当前游戏
-    const game = await getGame(room.currentGameId || '');
+    // 获取或创建当前游戏
+    let game = getGame(room.currentGameId || '');
     if (!game) {
-      return NextResponse.json(
-        { success: false, error: '游戏不存在' },
-        { status: 404 }
-      );
+      // 如果游戏不存在，创建一个新游戏
+      game = await getOrCreateActiveGame(roomId);
     }
 
     // AI生成题目

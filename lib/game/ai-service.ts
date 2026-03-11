@@ -4,10 +4,13 @@
  */
 
 import { Puzzle, AIResponse } from '../types';
+import { getPromptContent } from '../prompts';
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
 const JUDGE_MODEL = process.env.OPENROUTER_JUDGE_MODEL || 'openai/gpt-4o-mini';
 const GENERATE_MODEL = process.env.OPENROUTER_GENERATE_MODEL || 'anthropic/claude-3.5-sonnet';
+const JUDGE_TEMPERATURE = parseFloat(process.env.OPENROUTER_JUDGE_TEMPERATURE || '0.7');
+const GENERATE_TEMPERATURE = parseFloat(process.env.OPENROUTER_GENERATE_TEMPERATURE || '0.7');
 
 // 推理模式开关（判定AI和生成AI独立控制）
 const ENABLE_JUDGE_REASONING = process.env.ENABLE_JUDGE_REASONING === 'true';
@@ -19,6 +22,7 @@ const ENABLE_GENERATE_REASONING = process.env.ENABLE_GENERATE_REASONING === 'tru
 async function callOpenRouter(
   model: string,
   messages: Array<{ role: string; content: string }>,
+  temperature: number,
   enableReasoning: boolean = false
 ): Promise<string> {
   if (!OPENROUTER_API_KEY) {
@@ -29,7 +33,7 @@ async function callOpenRouter(
     const requestBody: any = {
       model,
       messages,
-      temperature: 0.7,
+      temperature,
       max_tokens: 1000,
     };
 
@@ -87,21 +91,8 @@ export async function judgeQuestion(
   puzzleBottom: string,
   conversationHistory?: Array<{ role: string; content: string }>
 ): Promise<{ response: AIResponse; explanation?: string }> {
-  // 构建提示词
-  const systemPrompt = `你是一个海龟汤游戏的裁判。海龟汤是一种情境推理游戏，玩家通过提问是/否问题来推理出完整的故事。
-
-你的任务是：
-1. 分析玩家的问题
-2. 根据提供的谜底（汤底），判断问题是否与故事核心要素相关
-3. 返回以下三种回答之一：
-   - "yes" - 如果问题指向故事的关键要素
-   - "no" - 如果问题与故事不符
-   - "irrelevant" - 如果问题不重要或无法判断
-
-重要：
-- 只返回这三个选项之一，不要添加其他内容
-- 要根据谜底的完整内容进行判断
-- 考虑对话历史的上下文`;
+  // 从配置文件加载提示词
+  const systemPrompt = getPromptContent('judge-question');
 
   const messages = [
     { role: 'system', content: systemPrompt },
@@ -118,7 +109,7 @@ export async function judgeQuestion(
   messages.push({ role: 'user', content: `玩家问题：${question}\n\n请回答yes/no/irrelevant：` });
 
   try {
-    const response = await callOpenRouter(JUDGE_MODEL, messages, ENABLE_JUDGE_REASONING);
+    const response = await callOpenRouter(JUDGE_MODEL, messages, JUDGE_TEMPERATURE, ENABLE_JUDGE_REASONING);
     const trimmedResponse = response.toLowerCase().trim();
 
     // 解析AI响应
@@ -176,7 +167,7 @@ export async function judgeGameEnd(
   ];
 
   try {
-    const response = await callOpenRouter(JUDGE_MODEL, messages);
+    const response = await callOpenRouter(JUDGE_MODEL, messages, JUDGE_TEMPERATURE);
     const trimmedResponse = response.toUpperCase().trim();
 
     if (trimmedResponse.includes('GAME_OVER')) {
@@ -194,22 +185,8 @@ export async function judgeGameEnd(
  * @param prompt 可选的提示词
  */
 export async function generatePuzzle(prompt?: string): Promise<Puzzle> {
-  const systemPrompt = `你是一个专业的海龟汤题目创作者。海龟汤是一种情境推理游戏，你需要创建一个有趣、有挑战性的情境推理题。
-
-要求：
-1. 谜面（汤面）：简短、神秘、引人入胜的情境描述，100-200字
-2. 谜底（汤底）：完整的、合乎逻辑的故事解释，200-400字
-3. 故事要有创意，不要太常见
-4. 谜面要足够神秘，但要有足够线索让玩家推理
-5. 谜底要合乎逻辑，不要太牵强
-
-请以JSON格式返回，格式如下：
-{
-  "surface": "谜面内容",
-  "bottom": "谜底内容"
-}
-
-只返回JSON，不要添加其他内容。`;
+  // 从配置文件加载提示词
+  const systemPrompt = getPromptContent('generate-puzzle');
 
   const userPrompt = prompt
     ? `请根据以下提示创建一个海龟汤题目：${prompt}`
@@ -221,7 +198,7 @@ export async function generatePuzzle(prompt?: string): Promise<Puzzle> {
   ];
 
   try {
-    const response = await callOpenRouter(GENERATE_MODEL, messages, ENABLE_GENERATE_REASONING);
+    const response = await callOpenRouter(GENERATE_MODEL, messages, GENERATE_TEMPERATURE, ENABLE_GENERATE_REASONING);
 
     // 尝试解析JSON
     let jsonStr = response.trim();
@@ -277,36 +254,8 @@ export async function judgeTruthCrack(
   feedback: string;
   confidence?: number;
 }> {
-  const systemPrompt = `你是一个海龟汤游戏的裁判。玩家试图还原整个故事的真相。
-
-你的任务是：
-1. 分析玩家的猜测与谜底的相似程度
-2. 判断猜测属于以下哪一类：
-   - "correct" - 玩家完全理解了故事的核心和关键细节
-   - "close" - 玩家理解了大部分内容，但缺少一些细节或有小错误
-   - "incorrect" - 玩家的猜测与真相相差较远
-
-判断标准：
-- correct: 包含所有关键要素，因果关系正确，细节准确
-- close: 理解主要情节，但可能缺少次要细节或有小偏差
-- incorrect: 核心要素错误或理解偏差较大
-
-请以JSON格式返回：
-{
-  "response": "correct" | "close" | "incorrect",
-  "feedback": "对玩家的反馈（鼓励性语言）",
-  "confidence": 0.0-1.0 之间的置信度
-}
-
-feedback 要求：
-- correct: 祝贺玩家，称赞其推理能力
-- close: 肯定玩家的理解，鼓励继续思考（不给具体提示）
-- incorrect: 鼓励玩家继续思考，可以给出轻微提示
-
-注意：
-- feedback 要友好、鼓励性
-- confidence 反映你判断的确信程度
-- 考虑对话历史的上下文`;
+  // 从配置文件加载提示词
+  const systemPrompt = getPromptContent('judge-truth-crack');
 
   const messages = [
     { role: 'system', content: systemPrompt },
@@ -330,6 +279,7 @@ feedback 要求：
     const response = await callOpenRouter(
       GENERATE_MODEL,
       messages,
+      GENERATE_TEMPERATURE,
       ENABLE_GENERATE_REASONING
     );
 

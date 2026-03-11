@@ -187,6 +187,10 @@ export function ChatInterface({
       setMessage('');
       setShowCommandSuggestions(false);
       setSelectedCommandIndex(0);
+      // 选择命令后保持焦点在输入框
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 0);
     }
   };
 
@@ -215,6 +219,9 @@ export function ChatInterface({
       textareaRef.current.style.height = '56px';
     }
 
+    // 发送前保持焦点
+    textareaRef.current?.focus();
+
     try {
       setIsSending(true);
       // 传递保存的破案模式状态
@@ -227,8 +234,10 @@ export function ChatInterface({
       setTimeout(() => setError(''), 3000);
     } finally {
       setIsSending(false);
-      // 发送完成后重新聚焦到输入框
-      textareaRef.current?.focus();
+      // 使用 setTimeout 确保 React 渲染完成后再聚焦
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 0);
     }
   };
 
@@ -287,6 +296,10 @@ export function ChatInterface({
                   key={cmd.command}
                   type="button"
                   onClick={() => selectCommand(cmd.command)}
+                  onMouseDown={(e) => {
+                    // 防止按钮获得焦点
+                    e.preventDefault();
+                  }}
                   className={cn(
                     "w-full px-4 py-3 text-left transition-colors duration-200",
                     "flex flex-col gap-1",
@@ -357,6 +370,10 @@ export function ChatInterface({
           <button
             type="button"
             onClick={() => handleSubmit()}
+            onMouseDown={(e) => {
+              // 防止按钮获得焦点
+              e.preventDefault();
+            }}
             disabled={disabled || isSending || !message.trim()}
             className={cn(
               "absolute right-3 bottom-3",
