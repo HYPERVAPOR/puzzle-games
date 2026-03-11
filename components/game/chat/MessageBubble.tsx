@@ -20,10 +20,10 @@ export function UserMessage({ content, username, timestamp }: UserMessageProps) 
   return (
     <div className="flex justify-end mb-6">
       <div className="max-w-[85%]">
-        <div className="text-xs text-zinc-500 dark:text-zinc-500 text-zinc-600 mb-1.5 px-1 flex items-center gap-2 transition-colors duration-300">
+        <div className="text-xs text-zinc-400 dark:text-zinc-400 text-zinc-600 mb-1.5 px-1 flex items-center gap-2 transition-colors duration-300">
           <span>{username}</span>
           {timestamp && (
-            <span className="text-zinc-600 dark:text-zinc-600 text-zinc-500 transition-colors duration-300">
+            <span className="text-zinc-400 dark:text-zinc-400 text-zinc-500 transition-colors duration-300">
               {new Date(timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
             </span>
           )}
@@ -63,11 +63,11 @@ export function AIMessage({ content, aiResponse, timestamp }: AIMessageProps) {
           {aiResponse && (
             <div className="flex items-center gap-1.5">
               {icons[aiResponse]}
-              <span className="text-xs text-zinc-500 dark:text-zinc-500 text-zinc-600 font-medium transition-colors duration-300">AI 判定</span>
+              <span className="text-xs text-zinc-400 dark:text-zinc-400 text-zinc-600 font-medium transition-colors duration-300">AI 判定</span>
             </div>
           )}
           {timestamp && (
-            <span className="text-xs text-zinc-600 dark:text-zinc-600 text-zinc-500 transition-colors duration-300">
+            <span className="text-xs text-zinc-400 dark:text-zinc-400 text-zinc-500 transition-colors duration-300">
               {new Date(timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
             </span>
           )}
@@ -89,13 +89,9 @@ interface SystemMessageProps {
 export function SystemMessage({ content }: SystemMessageProps) {
   return (
     <div className="flex justify-center my-4">
-      <div className={cn(
-        "px-4 py-2 rounded-full text-xs transition-colors duration-300",
-        "bg-slate-200/70 dark:bg-zinc-900/30",
-        "text-slate-500 dark:text-zinc-500"
-      )}>
+      <p className="text-xs text-zinc-600 dark:text-zinc-600 transition-colors duration-300">
         {content}
-      </div>
+      </p>
     </div>
   );
 }
@@ -204,7 +200,7 @@ export function CrackResultMessage({
               </span>
             </div>
             {timestamp && (
-              <span className="text-xs text-zinc-500 dark:text-zinc-500">
+              <span className="text-xs text-zinc-400 dark:text-zinc-400">
                 {new Date(timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
               </span>
             )}
@@ -234,7 +230,7 @@ export function CrackResultMessage({
             </span>
           </div>
           {timestamp && (
-            <span className="text-xs text-zinc-500 dark:text-zinc-500">
+            <span className="text-xs text-zinc-400 dark:text-zinc-400">
               {new Date(timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
             </span>
           )}

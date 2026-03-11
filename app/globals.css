@@ -2,14 +2,14 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #09090b;
+  --background: #131314;
   --foreground: #fafafa;
 
-  /* Dark theme (default) */
-  --color-bg-primary: #09090b;
-  --color-bg-secondary: #18181b;
+  /* Dark theme (default) - 更浅的深色 */
+  --color-bg-primary: #131314;
+  --color-bg-secondary: #1E1F20;
   --color-bg-tertiary: #27272a;
-  --color-bg-elevated: #18181b;
+  --color-bg-elevated: #1E1F20;
   --color-border: #27272a;
   --color-border-subtle: #27272a80;
   --color-text-primary: #fafafa;
@@ -103,12 +103,12 @@ html:not(.dark) ::-webkit-scrollbar-thumb:hover {
 
   /* Dark mode (default) */
   .glass-header {
-    @apply bg-zinc-950/80 border-b border-zinc-800/50;
+    background-color: #13131480;
   }
 
   /* Light mode */
   html:not(.dark) .glass-header {
-    @apply bg-white/88 border-b border-slate-200/90;
+    @apply bg-white/88;
   }
 
   .glass-panel {
@@ -117,7 +117,8 @@ html:not(.dark) ::-webkit-scrollbar-thumb:hover {
 
   /* Dark mode (default) */
   .glass-panel {
-    @apply bg-zinc-900/50 border border-zinc-800/50;
+    background-color: #1E1F2080;
+    border-color: #27272a80;
   }
 
   /* Light mode */
@@ -180,12 +181,77 @@ html:not(.dark) ::-webkit-scrollbar-thumb:hover {
 
   /* Dark mode (default) */
   *:focus-visible {
-    @apply ring-offset-zinc-950;
+    --tw-ring-offset-color: #131314;
   }
 
   /* Light mode */
   html:not(.dark) *:focus-visible {
     @apply ring-offset-white;
+  }
+}
+
+/* Override Tailwind default dark colors with our custom palette */
+@layer base {
+  .dark {
+    /* Override zinc colors with our custom palette */
+    --tw-bg-opacity: 1;
+    --tw-text-opacity: 1;
+  }
+}
+
+@layer utilities {
+  /* Custom dark mode backgrounds - 使用 html.dark 以确保优先级 */
+  html.dark .bg-zinc-900 {
+    background-color: #1E1F20 !important;
+  }
+
+  html.dark .bg-zinc-950 {
+    background-color: #131314 !important;
+  }
+
+  html.dark .bg-zinc-900\/50 {
+    background-color: #1E1F2080 !important;
+  }
+
+  html.dark .bg-zinc-950\/80 {
+    background-color: #131314CC !important;
+  }
+
+  html.dark .border-zinc-800 {
+    border-color: #27272a !important;
+  }
+
+  html.dark .border-zinc-800\/50 {
+    border-color: #27272a80 !important;
+  }
+
+  /* Text colors - 更亮的深色模式文本 */
+  html.dark .text-zinc-100 {
+    color: #fafafa !important;
+  }
+
+  html.dark .text-zinc-200 {
+    color: #e4e4e7 !important;
+  }
+
+  html.dark .text-zinc-300 {
+    color: #d4d4d8 !important;
+  }
+
+  html.dark .text-zinc-400 {
+    color: #c4c4c8 !important;
+  }
+
+  html.dark .text-zinc-500 {
+    color: #a1a1aa !important;
+  }
+
+  html.dark .text-zinc-600 {
+    color: #71717a !important;
+  }
+
+  html.dark .text-zinc-700 {
+    color: #52525b !important;
   }
 }
 

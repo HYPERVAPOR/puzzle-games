@@ -47,14 +47,6 @@ export async function POST(
       );
     }
 
-    // 如果已经有房主，不允许更改
-    if (room.ownerId) {
-      return NextResponse.json(
-        { success: false, error: '该房间已经有房主' },
-        { status: 403 }
-      );
-    }
-
     // 验证房主密码
     if (!verifyOwnerPassword(password)) {
       return NextResponse.json(

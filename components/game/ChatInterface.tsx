@@ -326,7 +326,7 @@ export function ChatInterface({
             onChange={handleChange}
             onKeyDown={handleKeyDown}
             disabled={disabled || isSending}
-            placeholder={isCrackMode ? "输入你认为的真相..." : "问问AI，输入'/crack'破案"}
+            placeholder={isCrackMode ? "输入你认为的真相..." : "问问AI，或输入'/crack'破案"}
             rows={1}
             className={cn(
               "w-full px-5 py-4 pr-14",

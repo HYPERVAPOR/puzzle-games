@@ -15,6 +15,7 @@ import { RightSidebar } from '@/components/game/RightSidebar';
 import { PuzzleMessage } from '@/components/game/chat/PuzzleMessage';
 import { PuzzleEditModal } from '@/components/game/PuzzleEditModal';
 import { ConfirmDialog } from '@/components/game/ConfirmDialog';
+import { AlertDialog } from '@/components/ui/AlertDialog';
 import { Game, Message, User, Room } from '@/lib/types';
 
 export default function GamePage() {
@@ -23,6 +24,7 @@ export default function GamePage() {
   const searchParams = useSearchParams();
   const roomId = params.roomId as string;
   const [copied, setCopied] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const [game, setGame] = useState<Game | null>(null);
   const [room, setRoom] = useState<Room | null>(null);
@@ -51,6 +53,19 @@ export default function GamePage() {
     onConfirm: () => {},
     variant: 'warning',
   });
+
+  const [alertDialog, setAlertDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    variant?: 'success' | 'error' | 'warning' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    variant: 'success',
+  });
+
   const initializedRef = useRef(false); // 标记是否已初始化加载过历史消息
   const messagesLengthRef = useRef(0); // 记录消息数量
   const gameRef = useRef<Game | null>(null); // 用于卸载时的离开事件
@@ -538,7 +553,12 @@ export default function GamePage() {
     if (data.success) {
       // 更新房间信息
       setRoom(data.data.room);
-      alert('你已成为默认房主！');
+      setAlertDialog({
+        isOpen: true,
+        title: '成功',
+        message: '你已成为默认房主！',
+        variant: 'success',
+      });
     } else {
       throw new Error(data.error || '成为房主失败');
     }
@@ -679,7 +699,7 @@ export default function GamePage() {
 
   return (
     <div className="flex h-screen bg-zinc-950 overflow-hidden transition-colors duration-300">
-      {/* 左侧：在线用户 + 已确认线索 */}
+      {/* 左侧：在线用户 + 已确认线索（移动端 fixed 定位覆盖，桌面端正常流） */}
       <RightSidebar
         users={game.users}
         currentUserId={currentUser.id}
@@ -690,20 +710,26 @@ export default function GamePage() {
         copied={copied}
         setCopied={setCopied}
         onBecomeOwner={handleBecomeOwner}
+        isMobileSidebarOpen={isMobileSidebarOpen}
+        setIsMobileSidebarOpen={setIsMobileSidebarOpen}
       />
 
       {/* 主聊天区域 */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* 头部 */}
-        <GameHeader game={game} roomName={roomName} isConnected={isConnected} />
+        <GameHeader
+          game={game}
+          roomName={roomName}
+          isConnected={isConnected}
+          onMenuClick={() => setIsMobileSidebarOpen(true)}
+        />
 
         {/* 谜面 - 固定在头部下方 */}
-        <div className="flex-shrink-0 border-b border-slate-200/90 dark:border-zinc-800/50 transition-colors duration-300">
+        <div className="flex-shrink-0 transition-colors duration-300">
           <div className="max-w-3xl mx-auto px-6 py-4">
             <div
-              className={isRoomOwner ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}
+              className={isRoomOwner ? 'cursor-pointer hover:underline decoration-1 underline-offset-4 decoration-zinc-300/70 dark:decoration-zinc-200/70' : ''}
               onClick={isRoomOwner ? handleOpenPuzzleModal : undefined}
-              title={isRoomOwner ? '点击编辑谜题' : ''}
             >
               <PuzzleMessage
                 surface={game.puzzle.surface}
@@ -711,11 +737,6 @@ export default function GamePage() {
                 isFinished={game.status === 'finished'}
               />
             </div>
-            {isRoomOwner && (
-              <p className="text-xs text-zinc-500 dark:text-zinc-500 mt-2 text-center">
-                点击谜题可编辑
-              </p>
-            )}
           </div>
         </div>
 
@@ -758,6 +779,15 @@ export default function GamePage() {
         onConfirm={confirmDialog.onConfirm}
         onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
         variant={confirmDialog.variant}
+      />
+
+      {/* 警告对话框 */}
+      <AlertDialog
+        isOpen={alertDialog.isOpen}
+        title={alertDialog.title}
+        message={alertDialog.message}
+        onConfirm={() => setAlertDialog(prev => ({ ...prev, isOpen: false }))}
+        variant={alertDialog.variant}
       />
     </div>
   );

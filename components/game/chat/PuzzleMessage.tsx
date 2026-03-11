@@ -42,7 +42,7 @@ export function PuzzleMessage({ surface, bottom, isFinished }: PuzzleMessageProp
         )}
 
         {/* Puzzle Content */}
-        <p className="text-sm text-slate-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap transition-colors duration-300 text-justify">
+        <p className="text-sm text-slate-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap transition-colors duration-300 text-center">
           {shouldCollapse && !isExpanded
             ? surface.substring(0, 150) + '...'
             : surface}
@@ -52,7 +52,7 @@ export function PuzzleMessage({ surface, bottom, isFinished }: PuzzleMessageProp
       {/* Answer (汤底) - Only if finished */}
       {isFinished && bottom && (
         <div className="mt-4 pt-4 border-t border-slate-200/50 dark:border-zinc-800/50 transition-colors duration-300">
-          <p className="text-sm text-slate-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap transition-colors duration-300 text-justify">
+          <p className="text-sm text-slate-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap transition-colors duration-300 text-center">
             {bottom}
           </p>
         </div>
