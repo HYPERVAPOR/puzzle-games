@@ -1,19 +1,20 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f5f7fb;
+  --foreground: #111827;
 
-  /* Modern Dark Theme - Zinc Palette (VSCode/Notion style) */
-  --color-bg-primary: #09090b;      /* zinc-950 */
-  --color-bg-secondary: #18181b;    /* zinc-900 */
-  --color-bg-tertiary: #27272a;     /* zinc-800 */
-  --color-bg-elevated: #18181b;     /* zinc-900 */
-  --color-border: #27272a;          /* zinc-800 */
-  --color-border-subtle: #27272a80; /* zinc-800/50 */
-  --color-text-primary: #fafafa;    /* zinc-50 */
-  --color-text-secondary: #a1a1aa;  /* zinc-400 */
-  --color-text-muted: #71717a;      /* zinc-500 */
+  /* Light theme */
+  --color-bg-primary: #f5f7fb;
+  --color-bg-secondary: #ffffff;
+  --color-bg-tertiary: #eef2f7;
+  --color-bg-elevated: #ffffff;
+  --color-border: #d7dee8;
+  --color-border-subtle: #d7dee880;
+  --color-text-primary: #111827;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748b;
 
   /* Accent Colors - Subtle & Professional */
   --color-accent: #10b981;          /* emerald-500 (primary) */
@@ -31,11 +32,22 @@
   --font-mono: 'Geist Mono', 'JetBrains Mono', 'Fira Code', monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #09090b;
-    --foreground: #fafafa;
-  }
+html.dark {
+  --background: #09090b;
+  --foreground: #fafafa;
+  --color-bg-primary: #09090b;
+  --color-bg-secondary: #18181b;
+  --color-bg-tertiary: #27272a;
+  --color-bg-elevated: #18181b;
+  --color-border: #27272a;
+  --color-border-subtle: #27272a80;
+  --color-text-primary: #fafafa;
+  --color-text-secondary: #a1a1aa;
+  --color-text-muted: #71717a;
+}
+
+html {
+  background: var(--background);
 }
 
 body {
@@ -95,7 +107,7 @@ html:not(.dark) ::-webkit-scrollbar-thumb:hover {
 
   /* Light mode */
   html:not(.dark) .glass-header {
-    @apply bg-white/80 border-b border-zinc-200/50;
+    @apply bg-white/88 border-b border-slate-200/90;
   }
 
   .glass-panel {
@@ -109,7 +121,7 @@ html:not(.dark) ::-webkit-scrollbar-thumb:hover {
 
   /* Light mode */
   html:not(.dark) .glass-panel {
-    @apply bg-white/50 border border-zinc-200/50;
+    @apply bg-white/88 border border-slate-200/90;
   }
 
   .transition-smooth {

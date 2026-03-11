@@ -139,8 +139,8 @@ export function RightSidebar({ users, currentUserId, clues, roomId, copied, setC
       ref={sidebarRef}
       className={cn(
         "h-full flex border-r relative transition-colors duration-300",
-        "bg-zinc-900/30 dark:bg-zinc-900/30 bg-zinc-100/30",
-        "border-zinc-800/50 dark:border-zinc-800/50 border-zinc-200/50",
+        "bg-white/88 dark:bg-zinc-900/30",
+        "border-slate-200/90 dark:border-zinc-800/50",
         className
       )}
       style={{ width: `${width}px`, minWidth: `${MIN_WIDTH}px`, maxWidth: `${MAX_WIDTH}px` }}
@@ -149,7 +149,7 @@ export function RightSidebar({ users, currentUserId, clues, roomId, copied, setC
       <div
         onMouseDown={handleMouseDown}
         className="absolute right-0 top-0 bottom-0 w-1 hover:w-2 cursor-ew-resize
-                     bg-transparent hover:bg-zinc-600/30
+                     bg-transparent hover:bg-slate-300/70 dark:hover:bg-zinc-600/30
                      transition-all duration-150
                      -mr-0.5"
         title="拖拽调整宽度"
@@ -157,7 +157,7 @@ export function RightSidebar({ users, currentUserId, clues, roomId, copied, setC
         {/* 可见的手柄图标 */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
                         opacity-0 hover:opacity-100
-                        text-zinc-400 hover:text-zinc-300
+                        text-slate-400 dark:text-zinc-400 hover:text-slate-600 dark:hover:text-zinc-300
                         transition-opacity duration-150">
           <GripVertical className="w-4 h-4" />
         </div>
@@ -270,7 +270,7 @@ export function RightSidebar({ users, currentUserId, clues, roomId, copied, setC
         </CollapsibleSection>
 
         {/* 底端按钮区域 */}
-        <div className="mt-auto border-t border-zinc-800/50 dark:border-zinc-800/50 border-zinc-200/50 p-3 transition-colors duration-300">
+        <div className="mt-auto border-t border-slate-200/90 dark:border-zinc-800/50 p-3 transition-colors duration-300">
           <div className="flex gap-2">
             {/* 设置按钮（带菜单） */}
             <SettingsMenu />

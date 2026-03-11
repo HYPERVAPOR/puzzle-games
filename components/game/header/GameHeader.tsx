@@ -38,7 +38,7 @@ export function GameHeader({ game, roomName, isConnected }: GameHeaderProps) {
           {/* Center: Room Name + Status Badge */}
           <div className="flex items-center gap-3">
             <div>
-              <h1 className="text-base font-semibold text-zinc-100 dark:text-zinc-100 text-zinc-900 tracking-tight transition-colors duration-300">
+              <h1 className="text-base font-semibold text-slate-900 dark:text-zinc-100 tracking-tight transition-colors duration-300">
                 {roomName}
               </h1>
             </div>

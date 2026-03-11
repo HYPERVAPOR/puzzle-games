@@ -33,13 +33,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (!mounted) return;
 
     const root = document.documentElement;
-    if (theme === 'dark') {
-      root.classList.add('dark');
-      root.style.backgroundColor = '#09090b'; // zinc-950
-    } else {
-      root.classList.remove('dark');
-      root.style.backgroundColor = '#ffffff';
-    }
+    root.classList.toggle('dark', theme === 'dark');
+    root.style.backgroundColor = theme === 'dark' ? '#09090b' : '#f5f7fb';
+    root.style.colorScheme = theme;
 
     // 保存到 localStorage
     localStorage.setItem('theme', theme);

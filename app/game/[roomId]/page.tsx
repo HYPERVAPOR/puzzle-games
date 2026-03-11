@@ -492,8 +492,8 @@ export default function GamePage() {
 
   if (!game || !currentUser) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <div className="text-zinc-400">加载中...</div>
+      <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 flex items-center justify-center transition-colors duration-300">
+        <div className="text-slate-500 dark:text-zinc-400 transition-colors duration-300">加载中...</div>
       </div>
     );
   }
@@ -501,7 +501,7 @@ export default function GamePage() {
   const isGameFinished = game.status === 'finished';
 
   return (
-    <div className="flex h-screen bg-zinc-950 dark:bg-zinc-950 bg-white overflow-hidden transition-colors duration-300">
+    <div className="flex h-screen bg-slate-50 dark:bg-zinc-950 overflow-hidden transition-colors duration-300">
       {/* 左侧：在线用户 + 已确认线索 */}
       <RightSidebar
         users={game.users}

@@ -29,8 +29,8 @@ export function UserMessage({ content, username, timestamp }: UserMessageProps) 
         </div>
         <div className={cn(
           "rounded-2xl rounded-tr-sm px-4 py-3 shadow-sm border transition-colors duration-300",
-          "bg-zinc-800 dark:bg-zinc-800 bg-zinc-200",
-          "border-zinc-700/50 dark:border-zinc-700/50 border-zinc-300/50"
+          "bg-slate-100 dark:bg-zinc-800",
+          "border-slate-200 dark:border-zinc-700/50"
         )}>
           <p className="text-sm text-zinc-100 dark:text-zinc-100 text-zinc-900 leading-relaxed whitespace-pre-wrap transition-colors duration-300">
             {content}
@@ -90,8 +90,8 @@ export function SystemMessage({ content }: SystemMessageProps) {
     <div className="flex justify-center my-4">
       <div className={cn(
         "px-4 py-2 rounded-full text-xs transition-colors duration-300",
-        "bg-zinc-900/30 dark:bg-zinc-900/30 bg-zinc-200/50",
-        "text-zinc-500 dark:text-zinc-500 text-zinc-600"
+        "bg-slate-200/70 dark:bg-zinc-900/30",
+        "text-slate-500 dark:text-zinc-500"
       )}>
         {content}
       </div>

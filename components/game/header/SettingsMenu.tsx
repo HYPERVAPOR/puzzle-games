@@ -6,7 +6,6 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useTheme } from '@/lib/theme-context';
 import { cn } from '@/lib/utils';
 
 interface SettingsMenuProps {
@@ -15,7 +14,6 @@ interface SettingsMenuProps {
 }
 
 export function SettingsMenu({ className, triggerClassName }: SettingsMenuProps) {
-  const { theme, toggleTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -100,20 +98,15 @@ export function SettingsMenu({ className, triggerClassName }: SettingsMenuProps)
             <div className="space-y-1" role="group">
               {/* 深色模式 */}
               <button
-                onClick={() => {
-                  if (theme !== 'dark') toggleTheme();
-                  setIsOpen(false);
-                }}
+                disabled
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2 rounded-lg",
                   "transition-all duration-200",
                   "text-left",
-                  theme === 'dark'
-                    ? "bg-emerald-500/10 text-emerald-400 dark:text-emerald-400 text-emerald-600"
-                    : "text-zinc-400 dark:text-zinc-400 text-zinc-600 hover:bg-zinc-800/50 dark:hover:bg-zinc-800/50 hover:bg-zinc-100/50 hover:text-zinc-300 dark:hover:text-zinc-300 hover:text-zinc-900"
+                  "text-zinc-600 dark:text-zinc-600 text-zinc-500",
+                  "cursor-not-allowed opacity-50"
                 )}
-                role="menuitemradio"
-                aria-checked={theme === 'dark'}
+                role="menuitem"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -129,40 +122,28 @@ export function SettingsMenu({ className, triggerClassName }: SettingsMenuProps)
                   <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
                 </svg>
                 <span className="text-sm font-medium">深色模式</span>
-                {theme === 'dark' && (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="ml-auto"
-                  >
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                )}
+                <span
+                  className={cn(
+                    "ml-auto text-xs px-1.5 py-0.5 rounded",
+                    "bg-zinc-700/50 dark:bg-zinc-700/50 bg-zinc-300/50",
+                    "text-zinc-500 dark:text-zinc-500 text-zinc-600"
+                  )}
+                >
+                  即将推出
+                </span>
               </button>
 
               {/* 浅色模式 */}
               <button
-                onClick={() => {
-                  if (theme !== 'light') toggleTheme();
-                  setIsOpen(false);
-                }}
+                disabled
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2 rounded-lg",
                   "transition-all duration-200",
                   "text-left",
-                  theme === 'light'
-                    ? "bg-emerald-500/10 text-emerald-400 dark:text-emerald-400 text-emerald-600"
-                    : "text-zinc-400 dark:text-zinc-400 text-zinc-600 hover:bg-zinc-800/50 dark:hover:bg-zinc-800/50 hover:bg-zinc-100/50 hover:text-zinc-300 dark:hover:text-zinc-300 hover:text-zinc-900"
+                  "text-zinc-600 dark:text-zinc-600 text-zinc-500",
+                  "cursor-not-allowed opacity-50"
                 )}
-                role="menuitemradio"
-                aria-checked={theme === 'light'}
+                role="menuitem"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -186,22 +167,15 @@ export function SettingsMenu({ className, triggerClassName }: SettingsMenuProps)
                   <path d="m19.07 4.93-1.41 1.41" />
                 </svg>
                 <span className="text-sm font-medium">浅色模式</span>
-                {theme === 'light' && (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="ml-auto"
-                  >
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                )}
+                <span
+                  className={cn(
+                    "ml-auto text-xs px-1.5 py-0.5 rounded",
+                    "bg-zinc-700/50 dark:bg-zinc-700/50 bg-zinc-300/50",
+                    "text-zinc-500 dark:text-zinc-500 text-zinc-600"
+                  )}
+                >
+                  即将推出
+                </span>
               </button>
             </div>
           </div>
