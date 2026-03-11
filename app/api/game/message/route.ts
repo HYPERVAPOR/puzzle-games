@@ -35,7 +35,6 @@ export async function POST(request: NextRequest) {
       data: {
         game: result.game,
         aiResponse: result.aiResponse,
-        gameOver: result.gameOver,
       },
     });
   } catch (error) {

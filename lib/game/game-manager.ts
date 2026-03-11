@@ -362,7 +362,7 @@ export async function sendMessage(
   userId: string,
   username: string,
   content: string
-): Promise<{ game: Game; aiResponse?: AIResponse; gameOver?: boolean }> {
+): Promise<{ game: Game; aiResponse?: AIResponse }> {
   let game = games.get(gameId);
   let loadedFromFile = false;
 
@@ -508,50 +508,6 @@ export async function sendMessage(
   };
   game.messages.push(aiMessage);
 
-  // 检查游戏是否应该结束
-  const yesCount = game.messages.filter(
-    m => m.aiResponse === 'yes'
-  ).length;
-
-  let gameOver = false;
-  if (yesCount >= 5) {
-    try {
-      const gameEndResult = await judgeGameEnd(
-        game.puzzle.bottom,
-        game.messages.slice(-20).map(m => ({
-          role: m.type === 'user' ? 'user' : 'assistant',
-          content: m.content,
-        })),
-        yesCount
-      );
-
-      if (gameEndResult.isGameOver) {
-        gameOver = true;
-        game.status = 'finished';
-        game.finishedAt = new Date();
-        game.winner = userId;
-
-        // 添加游戏结束系统消息
-        const endMessage: Message = {
-          id: generateMessageId(),
-          type: 'system',
-          content: `🎉 游戏结束！${username} 解开了谜题！\n\n谜底：${game.puzzle.bottom}`,
-          timestamp: new Date(),
-        };
-        game.messages.push(endMessage);
-
-        // 广播游戏结束事件
-        broadcastToGame(gameId, {
-          event: 'game_finished',
-          payload: { game, winner: username },
-          timestamp: new Date(),
-        });
-      }
-    } catch (error) {
-      console.error('Game end check failed:', error);
-    }
-  }
-
   // 保存并广播
   await saveGame(game);
   broadcastToGame(gameId, {
@@ -560,7 +516,7 @@ export async function sendMessage(
     timestamp: new Date(),
   });
 
-  return { game, aiResponse, gameOver };
+  return { game, aiResponse };
 }
 
 /**
@@ -820,15 +776,26 @@ export async function handleCrackAttempt(
     crackResponse = result.response;
     feedback = result.feedback;
 
-    // 成功时添加系统消息，但不结束游戏
+    // 成功时结束游戏
     if (crackResponse === 'correct') {
+      game.status = 'finished';
+      game.finishedAt = new Date();
+      game.winner = userId;
+
       const successMessage: Message = {
         id: generateMessageId(),
         type: 'system',
-        content: `🎉 ${username} 成功破案！真相已揭晓，游戏继续进行。`,
+        content: `🎉 ${username} 成功破案！真相已揭晓，游戏结束。`,
         timestamp: new Date(),
       };
       game.messages.push(successMessage);
+
+      // 广播游戏结束事件
+      broadcastToGame(gameId, {
+        event: 'game_finished',
+        payload: { game, winner: username },
+        timestamp: new Date(),
+      });
     }
   } catch (error) {
     console.error('Crack judge failed:', error);
