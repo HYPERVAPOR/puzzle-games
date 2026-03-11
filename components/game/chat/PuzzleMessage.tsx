@@ -26,7 +26,9 @@ export function PuzzleMessage({ surface, bottom, isFinished }: PuzzleMessageProp
 
     // 检查 scrollHeight 是否大于 clientHeight
     const checkOverflow = () => {
-      setIsOverflowing(element.scrollHeight > element.clientHeight);
+      const overflowing = element.scrollHeight > element.clientHeight;
+      // 一旦检测到溢出，就保持按钮显示（展开后不再重新检测）
+      setIsOverflowing(prev => prev || overflowing);
     };
 
     // 初始检测
