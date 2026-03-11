@@ -16,10 +16,11 @@ interface MessageListProps {
   messages: Message[];
   game: Game;
   currentUserId: string;
+  excludePuzzle?: boolean;
   className?: string;
 }
 
-export function MessageList({ messages, game, currentUserId, className }: MessageListProps) {
+export function MessageList({ messages, game, currentUserId, excludePuzzle = false, className }: MessageListProps) {
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const previousMessageCountRef = React.useRef(messages.length);
 
@@ -48,12 +49,14 @@ export function MessageList({ messages, game, currentUserId, className }: Messag
     <div className={cn("flex-1 overflow-y-auto", className)}>
       {/* Centered Container - 仿ChatGPT */}
       <div className="max-w-3xl mx-auto px-6 py-6">
-        {/* Puzzle - Pinned at top */}
-        <PuzzleMessage
-          surface={game.puzzle.surface}
-          bottom={game.puzzle.bottom}
-          isFinished={game.status === 'finished'}
-        />
+        {/* Puzzle - Pinned at top (只在非排除模式下显示) */}
+        {!excludePuzzle && (
+          <PuzzleMessage
+            surface={game.puzzle.surface}
+            bottom={game.puzzle.bottom}
+            isFinished={game.status === 'finished'}
+          />
+        )}
 
         {/* Messages */}
         {messages.map((message) => (

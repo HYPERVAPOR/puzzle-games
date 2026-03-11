@@ -12,6 +12,7 @@ import { MessageList } from '@/components/game/MessageList';
 import { ChatInterface } from '@/components/game/ChatInterface';
 import { GameHeader } from '@/components/game/header/GameHeader';
 import { RightSidebar } from '@/components/game/RightSidebar';
+import { PuzzleMessage } from '@/components/game/chat/PuzzleMessage';
 import { Game, Message, User } from '@/lib/types';
 
 export default function GamePage() {
@@ -513,12 +514,30 @@ export default function GamePage() {
       />
 
       {/* 主聊天区域 */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* 头部 */}
         <GameHeader game={game} roomName={roomName} isConnected={isConnected} />
 
-        {/* 消息列表 */}
-        <MessageList messages={messages} game={game} currentUserId={currentUser.id} />
+        {/* 谜面 - 固定在头部下方 */}
+        <div className="flex-shrink-0 border-b border-slate-200/90 dark:border-zinc-800/50 transition-colors duration-300">
+          <div className="max-w-3xl mx-auto px-6 py-4">
+            <PuzzleMessage
+              surface={game.puzzle.surface}
+              bottom={game.puzzle.bottom}
+              isFinished={game.status === 'finished'}
+            />
+          </div>
+        </div>
+
+        {/* 消息列表 - 可滚动 */}
+        <div className="flex-1 overflow-y-auto">
+          <MessageList
+            messages={messages}
+            game={game}
+            currentUserId={currentUser.id}
+            excludePuzzle={true}
+          />
+        </div>
 
         {/* 输入区域 */}
         <ChatInterface
