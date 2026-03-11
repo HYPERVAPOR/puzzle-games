@@ -162,13 +162,14 @@ export function CrackResultMessage({
           textColor: 'text-emerald-900 dark:text-emerald-100',
         };
       case 'close':
+        // close 也算破案成功
         return {
-          icon: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-amber-400"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>,
-          label: '非常接近',
-          labelColor: 'text-amber-600 dark:text-amber-400',
-          bgColor: 'bg-amber-50 dark:bg-amber-950/30',
-          borderColor: 'border-amber-300 dark:border-amber-700/50',
-          textColor: 'text-amber-900 dark:text-amber-100',
+          icon: <Check className="w-4 h-4 text-emerald-400" />,
+          label: '破案成功',
+          labelColor: 'text-emerald-600 dark:text-emerald-400',
+          bgColor: 'bg-emerald-50 dark:bg-emerald-950/30',
+          borderColor: 'border-emerald-300 dark:border-emerald-700/50',
+          textColor: 'text-emerald-900 dark:text-emerald-100',
         };
       case 'incorrect':
       default:

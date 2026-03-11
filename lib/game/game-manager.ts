@@ -776,8 +776,8 @@ export async function handleCrackAttempt(
     crackResponse = result.response;
     feedback = result.feedback;
 
-    // 成功时结束游戏
-    if (crackResponse === 'correct') {
+    // close 和 correct 都算破案成功
+    if (crackResponse === 'correct' || crackResponse === 'close') {
       game.status = 'finished';
       game.finishedAt = new Date();
       game.winner = userId;
@@ -814,7 +814,7 @@ export async function handleCrackAttempt(
     crackResponse,
     timestamp: new Date(),
     fullStory:
-      crackResponse === 'correct' ? game.puzzle.bottom : undefined,
+      crackResponse === 'correct' || crackResponse === 'close' ? game.puzzle.bottom : undefined,
   };
   game.messages.push(crackResultMessage);
 
