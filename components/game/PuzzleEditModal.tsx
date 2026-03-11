@@ -169,7 +169,7 @@ export function PuzzleEditModal({
               onChange={(e) => setSurface(e.target.value)}
               rows={4}
               placeholder="请输入汤面"
-              className="w-full px-4 py-3 bg-zinc-800 dark:bg-zinc-800 bg-zinc-100 border border-zinc-700 dark:border-zinc-700 border-zinc-300 rounded-xl text-sm text-zinc-100 dark:text-zinc-100 text-zinc-900 placeholder-zinc-500 dark:placeholder-zinc-500 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200"
+              className="w-full px-4 py-3 bg-zinc-800 dark:bg-zinc-800 bg-zinc-100 border border-zinc-700 dark:border-zinc-700 border-zinc-300 rounded-xl text-sm text-zinc-100 dark:text-zinc-100 text-zinc-900 placeholder-zinc-500 dark:placeholder-zinc-500 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 resize-none"
             />
           </div>
 
@@ -183,7 +183,7 @@ export function PuzzleEditModal({
               onChange={(e) => setBottom(e.target.value)}
               rows={6}
               placeholder="请输入汤底"
-              className="w-full px-4 py-3 bg-zinc-800 dark:bg-zinc-800 bg-zinc-100 border border-zinc-700 dark:border-zinc-700 border-zinc-300 rounded-xl text-sm text-zinc-100 dark:text-zinc-100 text-zinc-900 placeholder-zinc-500 dark:placeholder-zinc-500 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200"
+              className="w-full px-4 py-3 bg-zinc-800 dark:bg-zinc-800 bg-zinc-100 border border-zinc-700 dark:border-zinc-700 border-zinc-300 rounded-xl text-sm text-zinc-100 dark:text-zinc-100 text-zinc-900 placeholder-zinc-500 dark:placeholder-zinc-500 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 resize-none"
             />
           </div>
 
@@ -203,7 +203,7 @@ export function PuzzleEditModal({
                 onChange={(e) => setAiPrompt(e.target.value)}
                 placeholder="如'恐怖主题'、'科幻主题'等"
                 rows={3}
-                className="w-full px-4 py-3 bg-zinc-800 dark:bg-zinc-800 bg-zinc-100 border border-zinc-700 dark:border-zinc-700 border-zinc-300 rounded-xl text-sm text-zinc-100 dark:text-zinc-100 text-zinc-900 placeholder-zinc-500 dark:placeholder-zinc-500 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200"
+                className="w-full px-4 py-3 bg-zinc-800 dark:bg-zinc-800 bg-zinc-100 border border-zinc-700 dark:border-zinc-700 border-zinc-300 rounded-xl text-sm text-zinc-100 dark:text-zinc-100 text-zinc-900 placeholder-zinc-500 dark:placeholder-zinc-500 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 resize-none"
               />
               <motion.button
                 onClick={handleGenerate}
