@@ -214,7 +214,6 @@ export function ChatInterface({
     if (textareaRef.current) {
       textareaRef.current.style.height = '56px';
     }
-    textareaRef.current?.focus();
 
     try {
       setIsSending(true);
@@ -228,6 +227,8 @@ export function ChatInterface({
       setTimeout(() => setError(''), 3000);
     } finally {
       setIsSending(false);
+      // 发送完成后重新聚焦到输入框
+      textareaRef.current?.focus();
     }
   };
 
