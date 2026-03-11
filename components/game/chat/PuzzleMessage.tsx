@@ -19,38 +19,18 @@ export function PuzzleMessage({ surface, bottom, isFinished }: PuzzleMessageProp
   const shouldCollapse = surface.length > 150;
 
   return (
-    <div
-      className="mb-6 rounded-2xl overflow-hidden shadow-lg backdrop-blur-sm transition-colors duration-300
-                 bg-white/85 dark:bg-zinc-900/50
-                 border border-slate-200/80 dark:border-zinc-800/50"
-    >
+    <div className="mb-6">
       {/* Header - Always Visible */}
       <div
         onClick={() => shouldCollapse && setIsExpanded(!isExpanded)}
         className={cn(
-          "p-4 transition-colors",
-          shouldCollapse && "cursor-pointer hover:bg-slate-100/80 dark:hover:bg-zinc-800/30"
+          "transition-colors",
+          shouldCollapse && "cursor-pointer"
         )}
       >
-        <div className="flex items-start justify-between gap-3">
-          {/* Icon + Title */}
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-amber-500/10
-                        flex items-center justify-center">
-              <span className="text-amber-400">🐢</span>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-zinc-100 transition-colors duration-300">
-                汤面
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-zinc-500 mt-0.5 transition-colors duration-300">
-                {isFinished ? "已破解" : "推理真相"}
-              </p>
-            </div>
-          </div>
-
-          {/* Expand/Collapse Icon */}
-          {shouldCollapse && (
+        {/* Expand/Collapse Icon - Top Right */}
+        {shouldCollapse && (
+          <div className="flex justify-end mb-2">
             <button className="text-slate-500 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300 transition-colors">
               {isExpanded ? (
                 <ChevronUp className="w-5 h-5" />
@@ -58,32 +38,21 @@ export function PuzzleMessage({ surface, bottom, isFinished }: PuzzleMessageProp
                 <ChevronDown className="w-5 h-5" />
               )}
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* Preview (first 150 chars) */}
-        <div className="mt-3">
-          <p className="text-sm text-slate-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap transition-colors duration-300">
-            {shouldCollapse && !isExpanded
-              ? surface.substring(0, 150) + '...'
-              : surface}
-          </p>
-        </div>
+        {/* Puzzle Content */}
+        <p className="text-sm text-slate-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap transition-colors duration-300 text-justify">
+          {shouldCollapse && !isExpanded
+            ? surface.substring(0, 150) + '...'
+            : surface}
+        </p>
       </div>
 
       {/* Answer (汤底) - Only if finished */}
       {isFinished && bottom && (
-        <div className="border-t border-slate-200/80 dark:border-zinc-800/50 p-4 bg-slate-50/80 dark:bg-zinc-800/30 transition-colors duration-300">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-6 h-6 rounded bg-emerald-500/10
-                        flex items-center justify-center">
-              <span className="text-emerald-400 text-xs">✓</span>
-            </div>
-            <h4 className="text-xs font-semibold text-slate-500 dark:text-zinc-400 transition-colors duration-300">
-              真相
-            </h4>
-          </div>
-          <p className="text-sm text-slate-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap transition-colors duration-300">
+        <div className="mt-4 pt-4 border-t border-slate-200/50 dark:border-zinc-800/50 transition-colors duration-300">
+          <p className="text-sm text-slate-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap transition-colors duration-300 text-justify">
             {bottom}
           </p>
         </div>

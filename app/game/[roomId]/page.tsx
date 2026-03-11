@@ -13,6 +13,8 @@ import { ChatInterface } from '@/components/game/ChatInterface';
 import { GameHeader } from '@/components/game/header/GameHeader';
 import { RightSidebar } from '@/components/game/RightSidebar';
 import { PuzzleMessage } from '@/components/game/chat/PuzzleMessage';
+import { PuzzleEditModal } from '@/components/game/PuzzleEditModal';
+import { ConfirmDialog } from '@/components/game/ConfirmDialog';
 import { Game, Message, User, Room } from '@/lib/types';
 
 export default function GamePage() {
@@ -36,6 +38,19 @@ export default function GamePage() {
   const [puzzleBottom, setPuzzleBottom] = useState('');
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    variant?: 'danger' | 'warning' | 'info';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    variant: 'warning',
+  });
   const initializedRef = useRef(false); // 标记是否已初始化加载过历史消息
   const messagesLengthRef = useRef(0); // 记录消息数量
   const gameRef = useRef<Game | null>(null); // 用于卸载时的离开事件
@@ -183,30 +198,62 @@ export default function GamePage() {
 
   // 建立SSE连接
   const setupSSE = (gameId: string) => {
+    console.log(`[Frontend SSE] Setting up SSE connection for game ${gameId}`);
+
+    // 关闭旧的连接
+    if (eventSource) {
+      console.log(`[Frontend SSE] Closing old SSE connection before setting up new one`);
+      eventSource.close();
+    }
+
     const es = new EventSource(`/api/game/events?gameId=${gameId}`);
 
     es.onopen = () => {
+      console.log(`[Frontend SSE] Connection opened for game ${gameId}`);
       setIsConnected(true);
     };
 
-    es.onerror = () => {
+    es.onerror = (error) => {
+      console.error(`[Frontend SSE] Connection error for game ${gameId}:`, error);
       setIsConnected(false);
+      // EventSource 会自动重连，但我们可以关闭旧的连接并创建新的
+      es.close();
+      // 延迟 2 秒后重新连接
+      setTimeout(() => {
+        console.log(`[Frontend SSE] Attempting to reconnect to game ${gameId}`);
+        setupSSE(gameId);
+      }, 2000);
     };
 
     es.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        console.log(`[Frontend SSE] Raw message received:`, data);
         handleServerEvent(data);
       } catch (error) {
-        console.error('Failed to parse SSE message:', error);
+        console.error('Failed to parse SSE message:', error, event.data);
       }
     };
 
     setEventSource(es);
   };
 
+  // 监听游戏 ID 变化，重新建立 SSE 连接
+  useEffect(() => {
+    if (game && initializedRef.current) {
+      console.log(`[Frontend] Game ID changed to ${game.id}, reconnecting SSE`);
+      setupSSE(game.id);
+    }
+  }, [game?.id]);
+
   // 处理服务器事件
   const handleServerEvent = (data: any) => {
+    console.log(`[Frontend SSE] Received event: ${data.event}`, {
+      payloadKeys: Object.keys(data.payload || {}),
+      messageCount: data.payload?.game?.messages?.length,
+      currentMessageCount: messagesLengthRef.current,
+    });
+
     switch (data.event) {
       case 'user_joined':
       case 'user_left':
@@ -229,18 +276,34 @@ export default function GamePage() {
       case 'game_started':
         // 这些事件需要更新消息
         if (data.payload.game) {
-          setGame(data.payload.game);
-          const newMessages = data.payload.game.messages || [];
-          setMessages(newMessages);
-          messagesLengthRef.current = newMessages.length;
-          console.log(`[Frontend] ${data.event} event: updated to ${newMessages.length} messages`);
+          const newGame = data.payload.game;
+          const newMessages = newGame.messages || [];
+          const isReset = data.payload.isReset;
+
+          console.log(`[Frontend] ${data.event} event: received ${newMessages.length} messages, current: ${messagesLengthRef.current}, isReset: ${isReset}`);
+          console.log(`[Frontend] ${data.event} event: new game has ${newGame.users?.length || 0} users, new gameId: ${newGame.id}`);
+
+          // 总是使用 SSE 事件的完整消息列表（因为 SSE 是服务器广播的权威数据源）
+          setGame(newGame);
+
+          // 如果是重置事件，强制清空消息
+          if (isReset) {
+            console.log(`[Frontend] Game reset detected, clearing messages`);
+            setMessages([]);
+            messagesLengthRef.current = 0;
+          } else {
+            setMessages(newMessages);
+            messagesLengthRef.current = newMessages.length;
+          }
+
+          console.log(`[Frontend] ${data.event} event: updated to ${isReset ? 0 : newMessages.length} messages`);
         }
         break;
     }
   };
 
   // 发送消息
-  const handleSendMessage = useCallback(async (message: string) => {
+  const handleSendMessage = useCallback(async (message: string, isCrackAttempt = false) => {
     if (!game || !currentUser) return;
 
     // 乐观更新
@@ -249,24 +312,33 @@ export default function GamePage() {
 
     const optimisticUserMessage: Message = {
       id: tempUserMessageId,
-      type: 'user',
+      type: isCrackAttempt ? 'crack_attempt' : 'user',
       content: message,
       userId: currentUser.id,
       username: currentUser.username,
       timestamp: new Date(),
+      isCrackAttempt,
     };
 
     const optimisticAiMessage: Message = {
       id: tempAiMessageId,
-      type: 'ai',
-      content: '正在思考...',
+      type: isCrackAttempt ? 'crack_result' : 'ai',
+      content: isCrackAttempt ? '🧐 正在分析你的猜测...' : '正在思考...',
       timestamp: new Date(),
+      crackResponse: isCrackAttempt ? undefined : undefined,
     };
 
     setMessages((prev) => [...prev, optimisticUserMessage, optimisticAiMessage]);
 
     try {
-      const response = await fetch('/api/game/message', {
+      // 根据是否破案尝试调用不同的 API
+      const endpoint = isCrackAttempt ? '/api/game/crack' : '/api/game/message';
+
+      // 确保加载状态至少显示 800ms（用户体验优化）
+      const minDisplayTime = isCrackAttempt ? 800 : 0;
+      const startTime = Date.now();
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -276,21 +348,31 @@ export default function GamePage() {
           username: currentUser.username,
           gameId: game.id,
           message,
+          guess: isCrackAttempt ? message : undefined,
         }),
       });
 
       const data = await response.json();
+
+      // 等待最小显示时间
+      const elapsed = Date.now() - startTime;
+      if (elapsed < minDisplayTime) {
+        await new Promise(resolve => setTimeout(resolve, minDisplayTime - elapsed));
+      }
 
       if (!data.success) {
         throw new Error(data.error || '发送失败');
       }
 
       if (data.data.game) {
+        const apiMessages = data.data.game.messages;
+        console.log(`[Frontend] API response: received ${apiMessages.length} messages`);
+
         setGame(data.data.game);
         const newMessages = data.data.game.messages;
         setMessages(newMessages);
         messagesLengthRef.current = newMessages.length;
-        console.log(`[Frontend] Send message: updated to ${newMessages.length} messages`);
+        console.log(`[Frontend] Send message: updated to ${newMessages.length} messages from API`);
       }
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -345,42 +427,16 @@ export default function GamePage() {
     if (game) {
       setPuzzleSurface(game.puzzle.surface);
       setPuzzleBottom(game.puzzle.bottom);
+      setAiPrompt('');
       setIsPuzzleModalOpen(true);
     }
   };
 
-  // 更新谜题
-  const handleUpdatePuzzle = async () => {
-    if (!room || !currentUser) return;
-
-    try {
-      const response = await fetch(`/api/rooms/${room.id}/puzzle`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: currentUser.id,
-          surface: puzzleSurface,
-          bottom: puzzleBottom,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setGame(data.data.game);
-        setIsPuzzleModalOpen(false);
-      } else {
-        alert(data.error || '更新失败');
-      }
-    } catch (error) {
-      console.error('Failed to update puzzle:', error);
-      alert('更新失败，请稍后重试');
+  // AI生成新谜题（仅填充表单，不直接应用）
+  const handleGeneratePuzzle = async (prompt?: string) => {
+    if (!room || !currentUser) {
+      throw new Error('房间或用户信息不存在');
     }
-  };
-
-  // AI生成新谜题
-  const handleGeneratePuzzle = async () => {
-    if (!room || !currentUser) return;
 
     setIsGenerating(true);
 
@@ -390,56 +446,101 @@ export default function GamePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: currentUser.id,
-          prompt: aiPrompt || undefined,
+          prompt: prompt || undefined,
         }),
       });
 
       const data = await response.json();
 
-      if (data.success) {
-        setGame(data.data.game);
-        setIsPuzzleModalOpen(false);
-        setAiPrompt('');
-      } else {
-        alert(data.error || '生成失败');
+      if (!data.success) {
+        throw new Error(data.error || '生成失败');
       }
-    } catch (error) {
-      console.error('Failed to generate puzzle:', error);
-      alert('生成失败，请稍后重试');
+
+      // 返回生成的谜题数据，由调用方决定如何处理
+      return data.data.puzzle;
     } finally {
       setIsGenerating(false);
     }
   };
 
-  // 重开游戏（清空聊天记录，保留用户列表）
-  const handleResetGame = async () => {
+  // 重开游戏（清空聊天记录，保留用户列表，可选更新谜题）
+  const handleResetGameWithPuzzle = async (surface: string, bottom: string) => {
     if (!room || !currentUser) return;
 
-    if (!confirm('确定要重开游戏吗？聊天记录将被清空，但用户列表会保留。')) {
-      return;
-    }
+    // 显示确认对话框
+    setConfirmDialog({
+      isOpen: true,
+      title: '确认重开游戏',
+      message: '聊天记录将被清空，但用户列表会保留。确定要继续吗？',
+      variant: 'warning',
+      onConfirm: async () => {
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
 
-    try {
-      const response = await fetch(`/api/rooms/${room.id}/reset`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: currentUser.id,
-        }),
-      });
+        try {
+          const response = await fetch(`/api/rooms/${room.id}/reset`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: currentUser.id,
+              puzzle: {
+                surface,
+                bottom,
+              },
+            }),
+          });
 
-      const data = await response.json();
+          const data = await response.json();
 
-      if (data.success) {
-        setGame(data.data.game);
-        setMessages([]);
-        messagesLengthRef.current = 0;
-      } else {
-        alert(data.error || '重开失败');
-      }
-    } catch (error) {
-      console.error('Failed to reset game:', error);
-      alert('重开失败，请稍后重试');
+          if (data.success) {
+            setGame(data.data.game);
+            setMessages([]);
+            messagesLengthRef.current = 0;
+            setIsPuzzleModalOpen(false);
+          } else {
+            // 显示错误提示
+            setConfirmDialog({
+              isOpen: true,
+              title: '重开失败',
+              message: data.error || '重开游戏失败，请稍后重试',
+              variant: 'danger',
+              onConfirm: () => setConfirmDialog(prev => ({ ...prev, isOpen: false })),
+            });
+          }
+        } catch (error) {
+          console.error('Failed to reset game:', error);
+          setConfirmDialog({
+            isOpen: true,
+            title: '重开失败',
+            message: '重开游戏失败，请稍后重试',
+            variant: 'danger',
+            onConfirm: () => setConfirmDialog(prev => ({ ...prev, isOpen: false })),
+          });
+        }
+      },
+    });
+  };
+
+  // 成为默认房主
+  const handleBecomeOwner = async (password: string) => {
+    if (!room || !currentUser) return;
+
+    const response = await fetch(`/api/rooms/${room.id}/owner`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: currentUser.id,
+        password,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      // 更新房间信息
+      setRoom(data.data.room);
+      alert('你已成为默认房主！');
+    } else {
+      throw new Error(data.error || '成为房主失败');
     }
   };
 
@@ -448,42 +549,9 @@ export default function GamePage() {
     if (!game || !currentUser) return;
 
     let heartbeatInterval: NodeJS.Timeout;
-    let visibilityCheckTimeout: NodeJS.Timeout;
-    let isPageVisible = !document.hidden;
+    let isPageHidden = false;
 
     const sendHeartbeat = async () => {
-      // 如果页面不可见，发送特殊的离开信号
-      if (document.hidden && isPageVisible) {
-        // 页面刚变为不可见，立即发送离开事件
-        console.log('[Frontend] Page became hidden, sending immediate leave event');
-        try {
-          await fetch('/api/game/leave', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userId: currentUser.id,
-              gameId: game.id,
-              reason: 'page_hidden',
-            }),
-          });
-        } catch (error) {
-          console.error('[Frontend] Failed to send leave on page hide:', error);
-          // 失败则尝试 sendBeacon
-          const data = JSON.stringify({
-            userId: currentUser.id,
-            gameId: game.id,
-            reason: 'page_hidden',
-          });
-          navigator.sendBeacon('/api/game/leave', data);
-        }
-        isPageVisible = false;
-        return;
-      }
-
-      if (!document.hidden) {
-        isPageVisible = true;
-      }
-
       // 正常心跳
       try {
         await fetch('/api/game/heartbeat', {
@@ -511,19 +579,14 @@ export default function GamePage() {
     // 监听页面可见性变化
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        // 页面隐藏时，延迟3秒后发送离开事件（避免切换标签页时误触发）
-        visibilityCheckTimeout = setTimeout(async () => {
-          if (document.hidden) {
-            console.log('[Frontend] Page still hidden after 3s, sending leave event');
-            await sendHeartbeat(); // 会触发上面的离开逻辑
-          }
-        }, 3000);
+        // 页面隐藏时，记录状态但不发送 leave 事件
+        // 服务器会通过 30 秒无心跳来清理离线用户
+        console.log('[Frontend] Page hidden, pausing UI updates (still sending heartbeat)');
+        isPageHidden = true;
       } else {
-        // 页面重新可见，取消离开计时器
-        if (visibilityCheckTimeout) {
-          clearTimeout(visibilityCheckTimeout);
-        }
-        // 立即发送心跳
+        // 页面重新可见，立即发送心跳更新状态
+        console.log('[Frontend] Page visible again, resuming normal operation');
+        isPageHidden = false;
         sendHeartbeat();
       }
     };
@@ -532,9 +595,6 @@ export default function GamePage() {
 
     return () => {
       clearInterval(heartbeatInterval);
-      if (visibilityCheckTimeout) {
-        clearTimeout(visibilityCheckTimeout);
-      }
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [game, currentUser]);
@@ -608,24 +668,28 @@ export default function GamePage() {
 
   if (!game || !currentUser) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 flex items-center justify-center transition-colors duration-300">
-        <div className="text-slate-500 dark:text-zinc-400 transition-colors duration-300">加载中...</div>
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center transition-colors duration-300">
+        <div className="text-zinc-400 transition-colors duration-300">加载中...</div>
       </div>
     );
   }
 
   const isGameFinished = game.status === 'finished';
+  const isDefaultRoom = room?.isDefault || false;
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-zinc-950 overflow-hidden transition-colors duration-300">
+    <div className="flex h-screen bg-zinc-950 overflow-hidden transition-colors duration-300">
       {/* 左侧：在线用户 + 已确认线索 */}
       <RightSidebar
         users={game.users}
         currentUserId={currentUser.id}
         clues={game.publicClues}
         roomId={roomId}
+        isDefaultRoom={isDefaultRoom}
+        ownerId={room?.ownerId}
         copied={copied}
         setCopied={setCopied}
+        onBecomeOwner={handleBecomeOwner}
       />
 
       {/* 主聊天区域 */}
@@ -665,20 +729,8 @@ export default function GamePage() {
           />
         </div>
 
-        {/* 输入区域 + 房主控制按钮 */}
+        {/* 输入区域 */}
         <div className="flex-shrink-0">
-          {isRoomOwner && (
-            <div className="max-w-3xl mx-auto px-6 py-3 flex justify-end">
-              <button
-                onClick={handleResetGame}
-                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700
-                         text-zinc-200 dark:text-zinc-200 text-sm font-medium rounded-lg
-                         transition-all duration-200"
-              >
-                新的一局
-              </button>
-            </div>
-          )}
           <ChatInterface
             onSendMessage={handleSendMessage}
             disabled={isGameFinished}
@@ -687,115 +739,26 @@ export default function GamePage() {
       </div>
 
       {/* 编辑谜题弹窗 */}
-      {isPuzzleModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-zinc-900 dark:bg-zinc-900 bg-white rounded-2xl shadow-2xl border border-zinc-800 dark:border-zinc-800 border-zinc-200 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-            {/* 头部 */}
-            <div className="flex items-center justify-between p-6 border-b border-zinc-800 dark:border-zinc-800 border-zinc-200">
-              <h2 className="text-xl font-semibold text-zinc-100 dark:text-zinc-100 text-zinc-900">
-                编辑谜题
-              </h2>
-              <button
-                onClick={() => setIsPuzzleModalOpen(false)}
-                className="p-2 rounded-lg hover:bg-zinc-800 dark:hover:bg-zinc-800 hover:bg-zinc-200 transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400 dark:text-zinc-400 text-zinc-600">
-                  <path d="M18 6 6 18"/><path d="m6 6 18 18"/>
-                </svg>
-              </button>
-            </div>
-
-            {/* 内容 */}
-            <div className="p-6 space-y-6">
-              {/* 手动编辑 */}
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 dark:text-zinc-300 text-zinc-700 mb-2">
-                    汤面（谜面）
-                  </label>
-                  <textarea
-                    value={puzzleSurface}
-                    onChange={(e) => setPuzzleSurface(e.target.value)}
-                    placeholder="请输入汤面"
-                    rows={4}
-                    className="w-full px-4 py-3 bg-zinc-800 dark:bg-zinc-800 bg-zinc-100
-                             border border-zinc-700 dark:border-zinc-700 border-zinc-300 rounded-xl
-                             text-sm text-zinc-100 dark:text-zinc-100 text-zinc-900
-                             placeholder-zinc-500 dark:placeholder-zinc-500 placeholder-zinc-400
-                             focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500
-                             transition-all duration-200"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-zinc-300 dark:text-zinc-300 text-zinc-700 mb-2">
-                    汤底（谜底）
-                  </label>
-                  <textarea
-                    value={puzzleBottom}
-                    onChange={(e) => setPuzzleBottom(e.target.value)}
-                    placeholder="请输入汤底"
-                    rows={6}
-                    className="w-full px-4 py-3 bg-zinc-800 dark:bg-zinc-800 bg-zinc-100
-                             border border-zinc-700 dark:border-zinc-700 border-zinc-300 rounded-xl
-                             text-sm text-zinc-100 dark:text-zinc-100 text-zinc-900
-                             placeholder-zinc-500 dark:placeholder-zinc-500 placeholder-zinc-400
-                             focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500
-                             transition-all duration-200"
-                  />
-                </div>
-                <button
-                  onClick={handleUpdatePuzzle}
-                  disabled={!puzzleSurface.trim() || !puzzleBottom.trim()}
-                  className="w-full px-4 py-3 bg-emerald-500 hover:bg-emerald-400
-                           text-zinc-950 font-medium rounded-xl
-                           disabled:opacity-50 disabled:cursor-not-allowed
-                           transition-all duration-200"
-                >
-                  保存修改
-                </button>
-              </div>
-
-              {/* 分隔线 */}
-              <div className="border-t border-zinc-800 dark:border-zinc-800 border-zinc-200 pt-6">
-                <div className="text-center mb-4">
-                  <span className="text-sm text-zinc-500 dark:text-zinc-500 text-zinc-400">或</span>
-                </div>
-              </div>
-
-              {/* AI生成 */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium text-zinc-300 dark:text-zinc-300 text-zinc-700">
-                  AI生成新谜题
-                </h3>
-                <div>
-                  <textarea
-                    value={aiPrompt}
-                    onChange={(e) => setAiPrompt(e.target.value)}
-                    placeholder="可选：输入主题提示，如'恐怖主题'、'科幻主题'等"
-                    rows={3}
-                    className="w-full px-4 py-3 bg-zinc-800 dark:bg-zinc-800 bg-zinc-100
-                             border border-zinc-700 dark:border-zinc-700 border-zinc-300 rounded-xl
-                             text-sm text-zinc-100 dark:text-zinc-100 text-zinc-900
-                             placeholder-zinc-500 dark:placeholder-zinc-500 placeholder-zinc-400
-                             focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500
-                             transition-all duration-200"
-                  />
-                </div>
-                <button
-                  onClick={handleGeneratePuzzle}
-                  disabled={isGenerating}
-                  className="w-full px-4 py-3 bg-zinc-700 hover:bg-zinc-600 dark:bg-zinc-700 dark:hover:bg-zinc-600
-                           text-zinc-200 dark:text-zinc-200 font-medium rounded-xl
-                           disabled:opacity-50 disabled:cursor-not-allowed
-                           transition-all duration-200"
-                >
-                  {isGenerating ? '生成中...' : 'AI生成新谜题'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      {game && (
+        <PuzzleEditModal
+          isOpen={isPuzzleModalOpen}
+          onClose={() => setIsPuzzleModalOpen(false)}
+          currentPuzzle={game.puzzle}
+          onReset={handleResetGameWithPuzzle}
+          onGenerate={handleGeneratePuzzle}
+          isGenerating={isGenerating}
+        />
       )}
+
+      {/* 确认对话框 */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+        variant={confirmDialog.variant}
+      />
     </div>
   );
 }

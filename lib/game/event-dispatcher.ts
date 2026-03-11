@@ -11,8 +11,18 @@ interface SSEConnection {
   userId?: string;
 }
 
-// 连接池：存储所有活跃的SSE连接
-const connections = new Set<SSEConnection>();
+// 使用全局变量存储连接池，避免 Next.js 热重载时丢失连接
+const globalConnections = () => {
+  if (!(globalThis as any).__sse_connections__) {
+    (globalThis as any).__sse_connections__ = new Set<SSEConnection>();
+    console.log(`[EventDispatcher] Created new global connections pool`);
+  } else {
+    console.log(`[EventDispatcher] Using existing global connections pool, size: ${(globalThis as any).__sse_connections__.size}`);
+  }
+  return (globalThis as any).__sse_connections__;
+};
+
+const connections = globalConnections();
 
 /**
  * 发送事件到指定连接
@@ -21,10 +31,11 @@ function sendEvent(connection: SSEConnection, event: ServerEvent): void {
   try {
     const data = `data: ${JSON.stringify(event)}\n\n`;
     connection.controller.enqueue(new TextEncoder().encode(data));
+    console.log(`[EventDispatcher] Sent ${event.event} event to connection for game ${connection.gameId}`);
   } catch (error) {
-    console.error('Failed to send event:', error);
+    console.error(`[EventDispatcher] Failed to send event to connection for game ${connection.gameId}:`, error);
     // 连接可能已断开，移除连接
-    connections.delete(connection);
+    globalConnections().delete(connection);
   }
 }
 
@@ -32,7 +43,8 @@ function sendEvent(connection: SSEConnection, event: ServerEvent): void {
  * 广播事件到所有连接
  */
 export function broadcastEvent(event: ServerEvent): void {
-  connections.forEach(connection => {
+  const conns = globalConnections();
+  conns.forEach(connection => {
     sendEvent(connection, event);
   });
 }
@@ -41,11 +53,15 @@ export function broadcastEvent(event: ServerEvent): void {
  * 广播事件到指定游戏的所有连接
  */
 export function broadcastToGame(gameId: string, event: ServerEvent): void {
-  connections.forEach(connection => {
+  const conns = globalConnections();
+  let connectionCount = 0;
+  conns.forEach(connection => {
     if (connection.gameId === gameId) {
       sendEvent(connection, event);
+      connectionCount++;
     }
   });
+  console.log(`[EventDispatcher] Broadcast ${event.event} to ${connectionCount} connections for game ${gameId}`);
 }
 
 /**
@@ -56,17 +72,22 @@ export function addConnection(
   controller: ReadableStreamDefaultController,
   userId?: string
 ): () => void {
+  const conns = globalConnections();
   const connection: SSEConnection = {
     gameId,
     controller,
     userId,
   };
 
-  connections.add(connection);
+  conns.add(connection);
+  console.log(`[EventDispatcher] Added SSE connection for game ${gameId}, total connections: ${conns.size}`);
+  console.log(`[EventDispatcher] Current game IDs in pool:`, Array.from(conns).map(c => c.gameId));
 
   // 返回清理函数
   return () => {
-    connections.delete(connection);
+    console.log(`[EventDispatcher] Removing SSE connection for game ${gameId}`);
+    conns.delete(connection);
+    console.log(`[EventDispatcher] Remaining connections: ${conns.size}`);
   };
 }
 
@@ -74,13 +95,14 @@ export function addConnection(
  * 发送心跳保活消息
  */
 export function sendHeartbeat(): void {
-  connections.forEach(connection => {
+  const conns = globalConnections();
+  conns.forEach(connection => {
     try {
       const data = `: heartbeat\n\n`;
       connection.controller.enqueue(new TextEncoder().encode(data));
     } catch (error) {
       console.error('Failed to send heartbeat:', error);
-      connections.delete(connection);
+      conns.delete(connection);
     }
   });
 }
@@ -114,15 +136,16 @@ export function stopHeartbeat(): void {
  * 获取连接数量
  */
 export function getConnectionCount(): number {
-  return connections.size;
+  return globalConnections().size;
 }
 
 /**
  * 获取指定游戏的连接数量
  */
 export function getGameConnectionCount(gameId: string): number {
+  const conns = globalConnections();
   let count = 0;
-  connections.forEach(connection => {
+  conns.forEach(connection => {
     if (connection.gameId === gameId) {
       count++;
     }

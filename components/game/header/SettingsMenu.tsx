@@ -11,10 +11,17 @@ import { cn } from '@/lib/utils';
 interface SettingsMenuProps {
   className?: string;
   triggerClassName?: string;
+  roomId?: string;
+  isDefaultRoom?: boolean;
+  onBecomeOwner?: (password: string) => Promise<void> | void;
 }
 
-export function SettingsMenu({ className, triggerClassName }: SettingsMenuProps) {
+export function SettingsMenu({ className, triggerClassName, isDefaultRoom, onBecomeOwner }: SettingsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isOwnerModalOpen, setIsOwnerModalOpen] = useState(false);
+  const [ownerPassword, setOwnerPassword] = useState('');
+  const [ownerError, setOwnerError] = useState('');
+  const [isBecomingOwner, setIsBecomingOwner] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // 点击外部关闭菜单
@@ -33,6 +40,30 @@ export function SettingsMenu({ className, triggerClassName }: SettingsMenuProps)
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isOpen]);
+
+  // 成为房主
+  const handleBecomeOwner = async () => {
+    if (!ownerPassword.trim()) {
+      setOwnerError('请输入房主密码');
+      return;
+    }
+
+    setIsBecomingOwner(true);
+    setOwnerError('');
+
+    try {
+      if (onBecomeOwner) {
+        await onBecomeOwner(ownerPassword);
+        setIsOwnerModalOpen(false);
+        setOwnerPassword('');
+        setIsOpen(false);
+      }
+    } catch (error: any) {
+      setOwnerError(error.message || '成为房主失败');
+    } finally {
+      setIsBecomingOwner(false);
+    }
+  };
 
   return (
     <div className="relative" ref={menuRef}>
@@ -197,6 +228,44 @@ export function SettingsMenu({ className, triggerClassName }: SettingsMenuProps)
             >
               设置
             </p>
+
+            {/* 成为房主选项（仅默认房间） */}
+            {isDefaultRoom && (
+              <div className="space-y-1 mb-2" role="group">
+                <button
+                  onClick={() => {
+                    setIsOwnerModalOpen(true);
+                    setIsOpen(false);
+                  }}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3 py-2 rounded-lg",
+                    "transition-all duration-200",
+                    "text-left",
+                    "text-zinc-300 dark:text-zinc-300 text-zinc-700",
+                    "hover:bg-zinc-800/50 dark:hover:bg-zinc-800/50 hover:bg-zinc-200/50"
+                  )}
+                  role="menuitem"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                    <polyline points="10 17 15 12 10 7" />
+                    <line x1="15" x2="3" y1="12" y2="12" />
+                  </svg>
+                  <span className="text-sm font-medium">成为房主</span>
+                </button>
+              </div>
+            )}
+
             <div className="space-y-1" role="group">
               <button
                 disabled
@@ -308,6 +377,73 @@ export function SettingsMenu({ className, triggerClassName }: SettingsMenuProps)
                 >
                   即将推出
                 </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 成为房主弹窗 */}
+      {isOwnerModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-zinc-900 dark:bg-zinc-900 bg-white rounded-2xl shadow-2xl border border-zinc-800 dark:border-zinc-800 border-zinc-200 w-full max-w-md mx-4">
+            {/* 头部 */}
+            <div className="flex items-center justify-between p-6 border-b border-zinc-800 dark:border-zinc-800 border-zinc-200">
+              <h2 className="text-xl font-semibold text-zinc-100 dark:text-zinc-100 text-zinc-900">
+                成为默认房主
+              </h2>
+              <button
+                onClick={() => {
+                  setIsOwnerModalOpen(false);
+                  setOwnerPassword('');
+                  setOwnerError('');
+                }}
+                className="p-2 rounded-lg hover:bg-zinc-800 dark:hover:bg-zinc-800 hover:bg-zinc-200 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-400 dark:text-zinc-400 text-zinc-600">
+                  <path d="M18 6 6 18"/><path d="m6 6 18 18"/>
+                </svg>
+              </button>
+            </div>
+
+            {/* 内容 */}
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-zinc-400 dark:text-zinc-400 text-zinc-600">
+                输入房主密码后，你将成为默认房间的房主，可以编辑谜题和重开游戏。
+              </p>
+              <div>
+                <input
+                  type="password"
+                  value={ownerPassword}
+                  onChange={(e) => setOwnerPassword(e.target.value)}
+                  placeholder="请输入房主密码"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleBecomeOwner();
+                    }
+                  }}
+                  className="w-full px-4 py-3 bg-zinc-800 dark:bg-zinc-800 bg-zinc-100
+                           border border-zinc-700 dark:border-zinc-700 border-zinc-300 rounded-xl
+                           text-sm text-zinc-100 dark:text-zinc-100 text-zinc-900
+                           placeholder-zinc-500 dark:placeholder-zinc-500 placeholder-zinc-400
+                           focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500
+                           transition-all duration-200"
+                />
+              </div>
+              {ownerError && (
+                <div className="px-4 py-2 bg-rose-500/10 border border-rose-500/20 rounded-lg">
+                  <p className="text-sm text-rose-400">{ownerError}</p>
+                </div>
+              )}
+              <button
+                onClick={handleBecomeOwner}
+                disabled={isBecomingOwner || !ownerPassword.trim()}
+                className="w-full px-4 py-3 bg-emerald-500 hover:bg-emerald-400
+                         text-zinc-950 font-medium rounded-xl
+                         disabled:opacity-50 disabled:cursor-not-allowed
+                         transition-all duration-200"
+              >
+                {isBecomingOwner ? '处理中...' : '成为房主'}
               </button>
             </div>
           </div>

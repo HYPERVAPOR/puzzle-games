@@ -16,10 +16,14 @@ export async function GET(request: NextRequest) {
     return new Response('Missing gameId parameter', { status: 400 });
   }
 
+  console.log(`[SSE Route] New SSE connection request for game ${gameId}`);
+
   // 创建SSE流
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     start(controller) {
+      console.log(`[SSE Route] SSE stream started for game ${gameId}`);
+
       // 发送初始连接成功消息
       const data = `data: ${JSON.stringify({
         event: 'connected',
@@ -27,12 +31,15 @@ export async function GET(request: NextRequest) {
         timestamp: new Date(),
       })}\n\n`;
       controller.enqueue(encoder.encode(data));
+      console.log(`[SSE Route] Sent connected event to client for game ${gameId}`);
 
       // 添加连接到连接池
       const cleanup = addConnection(gameId, controller);
+      console.log(`[SSE Route] Connection added to pool for game ${gameId}`);
 
       // 当连接关闭时清理
       request.signal.addEventListener('abort', () => {
+        console.log(`[SSE Route] Connection aborted for game ${gameId}`);
         cleanup();
         controller.close();
       });

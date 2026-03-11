@@ -18,8 +18,11 @@ interface RightSidebarProps {
   currentUserId?: string;
   clues: string[];
   roomId: string;
+  isDefaultRoom?: boolean;
+  ownerId?: string;
   copied: boolean;
   setCopied: (copied: boolean) => void;
+  onBecomeOwner?: (password: string) => Promise<void> | void;
   className?: string;
 }
 
@@ -90,7 +93,7 @@ function CollapsibleSection({
   );
 }
 
-export function RightSidebar({ users, currentUserId, clues, roomId, copied, setCopied, className }: RightSidebarProps) {
+export function RightSidebar({ users, currentUserId, clues, roomId, isDefaultRoom, ownerId, copied, setCopied, onBecomeOwner, className }: RightSidebarProps) {
   const [usersExpanded, setUsersExpanded] = useState(true);
   const [cluesExpanded, setCluesExpanded] = useState(true);
   const [width, setWidth] = useState(DEFAULT_WIDTH);
@@ -182,37 +185,64 @@ export function RightSidebar({ users, currentUserId, clues, roomId, copied, setC
             </div>
           ) : (
             <div className="space-y-1">
-              {users.map((user) => (
-                <div
-                  key={user.id}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-lg",
-                    "transition-all duration-200",
-                    user.id === currentUserId
-                      ? "bg-emerald-500/10 border border-emerald-500/20"
-                      : "hover:bg-zinc-800/50 dark:hover:bg-zinc-800/50 hover:bg-zinc-200/50"
-                  )}
-                >
-                  {/* Avatar */}
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br
-                              from-blue-500 to-purple-600
-                              flex items-center justify-center
-                              text-white font-semibold text-sm
-                              flex-shrink-0">
-                    {user.username.charAt(0).toUpperCase()}
-                  </div>
+              {users.map((user) => {
+                const isOwner = ownerId && user.id === ownerId;
+                return (
+                  <div
+                    key={user.id}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 rounded-lg",
+                      "transition-all duration-200",
+                      user.id === currentUserId
+                        ? "bg-emerald-500/10 border border-emerald-500/20"
+                        : "hover:bg-zinc-800/50 dark:hover:bg-zinc-800/50 hover:bg-zinc-200/50"
+                    )}
+                  >
+                    {/* Avatar */}
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br
+                                from-blue-500 to-purple-600
+                                flex items-center justify-center
+                                text-white font-semibold text-sm
+                                flex-shrink-0">
+                      {user.username.charAt(0).toUpperCase()}
+                    </div>
 
-                  {/* Username - 强制换行 */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-zinc-300 dark:text-zinc-300 text-zinc-700 break-words transition-colors duration-300">
-                      {user.username}
-                      {user.id === currentUserId && (
-                        <span className="ml-1.5 text-xs text-zinc-500 dark:text-zinc-500 text-zinc-600 transition-colors duration-300">(你)</span>
-                      )}
-                    </p>
+                    {/* Username - 强制换行 */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-zinc-300 dark:text-zinc-300 text-zinc-700 break-words transition-colors duration-300">
+                        {user.username}
+                        {user.id === currentUserId && (
+                          <span className="ml-1.5 text-xs text-zinc-500 dark:text-zinc-500 text-zinc-600 transition-colors duration-300">(你)</span>
+                        )}
+                      </p>
+                    </div>
+
+                    {/* 房主标签 */}
+                    {isOwner && (
+                      <div className="flex-shrink-0">
+                        <div className="flex items-center gap-1 px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded-full">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="10"
+                            height="10"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="text-amber-400"
+                          >
+                            <circle cx="12" cy="8" r="5"/>
+                            <path d="M20 21a8 8 0 0 0-16 0"/>
+                          </svg>
+                          <span className="text-xs text-amber-400 font-medium">房主</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CollapsibleSection>
@@ -273,7 +303,10 @@ export function RightSidebar({ users, currentUserId, clues, roomId, copied, setC
         <div className="mt-auto border-t border-slate-200/90 dark:border-zinc-800/50 p-3 transition-colors duration-300">
           <div className="flex gap-2">
             {/* 设置按钮（带菜单） */}
-            <SettingsMenu />
+            <SettingsMenu
+              isDefaultRoom={isDefaultRoom}
+              onBecomeOwner={onBecomeOwner}
+            />
 
             {/* 分享按钮 */}
             <button

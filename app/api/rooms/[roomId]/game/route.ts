@@ -44,6 +44,7 @@ export async function POST(
 
     // 获取或创建房间游戏
     const game = await getOrCreateActiveGame(room.id);
+    console.log(`[RoomGameAPI] Retrieved/created game ${game.id} for room ${room.id}`);
 
     // 创建用户对象
     const user: User = {
@@ -55,6 +56,7 @@ export async function POST(
 
     // 加入游戏
     const updatedGame = await joinGame(game.id, user);
+    console.log(`[RoomGameAPI] User ${username} (${user.id}) joined game ${game.id}, total users: ${updatedGame.users.length}`);
 
     return NextResponse.json({
       success: true,

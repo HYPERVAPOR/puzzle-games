@@ -6,7 +6,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { Game, User, Message, Puzzle, GameStatus, AIResponse } from '../types';
-import { judgeQuestion, judgeGameEnd } from './ai-service';
+import { judgeQuestion, judgeGameEnd, judgeTruthCrack } from './ai-service';
 import { broadcastToGame } from './event-dispatcher';
 import { saveGame, loadGame, GAMES_DIR } from '../storage/file-storage';
 import { incrementRoomGameCount, setRoomCurrentGame } from '../storage/room-store';
@@ -101,13 +101,29 @@ export function getGame(gameId: string): Game | undefined {
 }
 
 /**
+ * 更新内存中的游戏
+ */
+export function updateGameInMemory(game: Game): void {
+  games.set(game.id, game);
+}
+
+/**
+ * 从内存中移除游戏
+ */
+export function removeGameFromMemory(gameId: string): void {
+  games.delete(gameId);
+}
+
+/**
  * 获取或创建当前活跃游戏
  * 优先从文件加载，文件不存在才创建新游戏
  */
 export async function getOrCreateActiveGame(roomId: string, puzzle?: Puzzle): Promise<Game> {
+  console.log(`[getOrCreateActiveGame] Looking for active game in room ${roomId}`);
   // 1. 先检查内存中是否有该房间的活跃游戏
   for (const game of games.values()) {
     if (game.roomId === roomId && game.status !== 'finished') {
+      console.log(`[getOrCreateActiveGame] Found active game ${game.id} in memory for room ${roomId}`);
       // 验证文件是否仍然存在（loadGame 内部 catch 错误返回 null，不会 throw）
       const fileGame = await loadGame(game.id);
       if (fileGame) {
@@ -163,6 +179,7 @@ export async function getOrCreateActiveGame(roomId: string, puzzle?: Puzzle): Pr
     bottom: '这个男人是盲人，他以为火车已经停了，所以跳下车，结果火车还在行驶，他摔死了。',
   };
 
+  console.log(`[getOrCreateActiveGame] No active game found for room ${roomId}, creating new game`);
   return await createGame(roomId, puzzle || defaultPuzzle);
 }
 
@@ -707,4 +724,140 @@ export function startCleanupTask(): NodeJS.Timeout {
       }
     }
   }, 15000); // 15秒
+}
+
+/**
+ * 处理破案尝试
+ */
+export async function handleCrackAttempt(
+  gameId: string,
+  userId: string,
+  username: string,
+  guess: string
+): Promise<{
+  game: Game;
+  crackResponse: 'correct' | 'close' | 'incorrect';
+  feedback: string;
+}> {
+  let game = games.get(gameId);
+
+  // 加载游戏逻辑（与 sendMessage 相同）
+  if (!game) {
+    try {
+      const loadedGame = await loadGame(gameId);
+      if (loadedGame) {
+        game = loadedGame;
+        games.set(gameId, game);
+        await purgeStaleUsers(gameId);
+      }
+    } catch (error) {
+      console.error(`Failed to load game ${gameId}:`, error);
+    }
+  }
+
+  if (!game) {
+    throw new Error('游戏不存在');
+  }
+
+  // 检查速率限制
+  if (!checkRateLimit(userId)) {
+    throw new Error('发送消息过于频繁，请稍后再试');
+  }
+
+  // 更新用户心跳
+  let sendingUser = game.users.find((u) => u.id === userId);
+  if (sendingUser) {
+    sendingUser.username = username;
+    sendingUser.lastHeartbeat = new Date();
+    sendingUser.lastSeen = new Date();
+  } else {
+    sendingUser = {
+      id: userId,
+      username,
+      joinedAt: new Date(),
+      lastSeen: new Date(),
+      lastHeartbeat: new Date(),
+    };
+    game.users.push(sendingUser);
+  }
+
+  // 如果游戏未开始，开始游戏
+  if (game.status === 'waiting') {
+    game.status = 'playing';
+  }
+
+  // 添加破案尝试消息
+  const crackAttemptMessage: Message = {
+    id: generateMessageId(),
+    type: 'crack_attempt',
+    content: guess,
+    userId,
+    username,
+    timestamp: new Date(),
+    isCrackAttempt: true,
+  };
+  game.messages.push(crackAttemptMessage);
+
+  // 调用 AI 判定
+  let crackResponse: 'correct' | 'close' | 'incorrect';
+  let feedback: string;
+
+  try {
+    const result = await judgeTruthCrack(
+      guess,
+      game.puzzle.bottom,
+      game.messages
+        .slice(-20)
+        .map((m) => ({
+          role:
+            m.type === 'user' || m.type === 'crack_attempt'
+              ? 'user'
+              : 'assistant',
+          content: m.content,
+        }))
+    );
+
+    crackResponse = result.response;
+    feedback = result.feedback;
+
+    // 成功时添加系统消息，但不结束游戏
+    if (crackResponse === 'correct') {
+      const successMessage: Message = {
+        id: generateMessageId(),
+        type: 'system',
+        content: `🎉 ${username} 成功破案！真相已揭晓，游戏继续进行。`,
+        timestamp: new Date(),
+      };
+      game.messages.push(successMessage);
+    }
+  } catch (error) {
+    console.error('Crack judge failed:', error);
+    throw new Error(
+      error instanceof Error
+        ? `AI服务不可用: ${error.message}`
+        : 'AI服务暂时不可用，请稍后重试'
+    );
+  }
+
+  // 添加破案结果消息
+  const crackResultMessage: Message = {
+    id: generateMessageId(),
+    type: 'crack_result',
+    content: feedback,
+    crackResponse,
+    timestamp: new Date(),
+    fullStory:
+      crackResponse === 'correct' ? game.puzzle.bottom : undefined,
+  };
+  game.messages.push(crackResultMessage);
+
+  // 保存并广播
+  await saveGame(game);
+  broadcastToGame(gameId, {
+    event: 'new_message',
+    payload: { message: crackResultMessage, game },
+    timestamp: new Date(),
+  });
+
+  return { game, crackResponse, feedback };
 }

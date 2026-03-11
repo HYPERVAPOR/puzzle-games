@@ -261,3 +261,126 @@ export async function testAIService(): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * 破案判定：判断玩家是否还原了真相
+ * @param guess 玩家的猜测
+ * @param puzzleBottom 谜底（汤底）
+ * @param conversationHistory 对话历史
+ */
+export async function judgeTruthCrack(
+  guess: string,
+  puzzleBottom: string,
+  conversationHistory?: Array<{ role: string; content: string }>
+): Promise<{
+  response: 'correct' | 'close' | 'incorrect';
+  feedback: string;
+  confidence?: number;
+}> {
+  const systemPrompt = `你是一个海龟汤游戏的裁判。玩家试图还原整个故事的真相。
+
+你的任务是：
+1. 分析玩家的猜测与谜底的相似程度
+2. 判断猜测属于以下哪一类：
+   - "correct" - 玩家完全理解了故事的核心和关键细节
+   - "close" - 玩家理解了大部分内容，但缺少一些细节或有小错误
+   - "incorrect" - 玩家的猜测与真相相差较远
+
+判断标准：
+- correct: 包含所有关键要素，因果关系正确，细节准确
+- close: 理解主要情节，但可能缺少次要细节或有小偏差
+- incorrect: 核心要素错误或理解偏差较大
+
+请以JSON格式返回：
+{
+  "response": "correct" | "close" | "incorrect",
+  "feedback": "对玩家的反馈（鼓励性语言）",
+  "confidence": 0.0-1.0 之间的置信度
+}
+
+feedback 要求：
+- correct: 祝贺玩家，称赞其推理能力
+- close: 肯定玩家的理解，鼓励继续思考（不给具体提示）
+- incorrect: 鼓励玩家继续思考，可以给出轻微提示
+
+注意：
+- feedback 要友好、鼓励性
+- confidence 反映你判断的确信程度
+- 考虑对话历史的上下文`;
+
+  const messages = [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: `谜底：${puzzleBottom}` },
+  ];
+
+  // 添加对话历史（最近20条）
+  if (conversationHistory && conversationHistory.length > 0) {
+    const recentHistory = conversationHistory.slice(-20);
+    recentHistory.forEach(msg => {
+      messages.push({ role: msg.role, content: msg.content });
+    });
+  }
+
+  messages.push({
+    role: 'user',
+    content: `玩家的猜测：${guess}\n\n请判断猜测准确性并返回JSON：`,
+  });
+
+  try {
+    const response = await callOpenRouter(
+      GENERATE_MODEL,
+      messages,
+      ENABLE_GENERATE_REASONING
+    );
+
+    // 尝试解析 JSON
+    let jsonStr = response.trim();
+
+    // 提取JSON（如果响应包含其他文本）
+    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      jsonStr = jsonMatch[0];
+    }
+
+    const result = JSON.parse(jsonStr);
+
+    // 验证响应格式
+    if (
+      !result.response ||
+      !['correct', 'close', 'incorrect'].includes(result.response)
+    ) {
+      throw new Error('Invalid crack response from AI');
+    }
+
+    return {
+      response: result.response,
+      feedback: result.feedback || getDefaultFeedback(result.response),
+      confidence: result.confidence || 0.8,
+    };
+  } catch (error) {
+    console.error('Crack judge failed:', error);
+    throw new Error(
+      error instanceof Error
+        ? `破案判定失败: ${error.message}`
+        : '破案判定服务暂时不可用'
+    );
+  }
+}
+
+/**
+ * 获取默认反馈
+ */
+function getDefaultFeedback(
+  response: 'correct' | 'close' | 'incorrect'
+): string {
+  switch (response) {
+    case 'correct':
+      return '🎉 恭喜你！你完全还原了真相！';
+    case 'close':
+      return '👍 非常接近了！你已经理解了大部分内容，继续思考细节。';
+    case 'incorrect':
+      return '🤔 还没有对哦，再仔细想想故事的关键线索。';
+    default:
+      return '继续加油！';
+  }
+}

@@ -17,11 +17,19 @@ interface GameHeaderProps {
 type StatusVariant = 'playing' | 'solved';
 
 export function GameHeader({ game, roomName, isConnected }: GameHeaderProps) {
-  // 确定游戏状态 - 只显示进行中和已破解
-  const getStatus = (): { text: string; variant: StatusVariant } | null => {
-    if (game.status === 'finished') return { text: '已破解', variant: 'solved' };
-    if (game.status === 'playing') return { text: '进行中', variant: 'playing' };
-    return null; // waiting状态不显示badge
+  // 确定游戏状态 - 只显示进行中和已破案
+  const getStatus = (): { text: string; variant: StatusVariant } => {
+    // 检查是否有成功的破案记录
+    const hasSuccessfulCrack = game.messages?.some(
+      msg => msg.type === 'crack_result' && msg.crackResponse === 'correct'
+    );
+
+    if (hasSuccessfulCrack) {
+      return { text: '已破案', variant: 'solved' };
+    }
+
+    // 游戏正在进行中（包括 waiting 和 playing 状态）
+    return { text: '进行中', variant: 'playing' };
   };
 
   const status = getStatus();
@@ -42,16 +50,14 @@ export function GameHeader({ game, roomName, isConnected }: GameHeaderProps) {
                 {roomName}
               </h1>
             </div>
-            {status && (
-              <span
-                className={cn(
-                  "px-2.5 py-1 text-xs font-medium rounded-md border transition-smooth",
-                  statusVariants[status.variant]
-                )}
-              >
-                {status.text}
-              </span>
-            )}
+            <span
+              className={cn(
+                "px-2.5 py-1 text-xs font-medium rounded-md border transition-smooth",
+                statusVariants[status.variant]
+              )}
+            >
+              {status.text}
+            </span>
           </div>
         </div>
       </div>

@@ -9,8 +9,9 @@ export interface User {
 }
 
 // 消息
-export type MessageType = 'system' | 'user' | 'ai' | 'admin';
+export type MessageType = 'system' | 'user' | 'ai' | 'admin' | 'crack_attempt' | 'crack_result';
 export type AIResponse = 'yes' | 'no' | 'irrelevant';
+export type CrackResponse = 'incorrect' | 'close' | 'correct';
 export type MessageStatus = 'pending' | 'sent' | 'failed';
 
 export interface Message {
@@ -22,6 +23,9 @@ export interface Message {
   timestamp: Date;
   aiResponse?: AIResponse;
   status?: MessageStatus;  // 仅用于乐观更新的临时状态
+  crackResponse?: CrackResponse;  // 破案判定结果
+  isCrackAttempt?: boolean;  // 标记是否为破案尝试
+  fullStory?: string;  // 完整真相（仅在成功时显示）
 }
 
 // 题目
@@ -141,4 +145,19 @@ export interface GeneratePuzzleRequest {
   adminPasscode: string;
   prompt?: string;
   roomId?: string;
+}
+
+// 破案尝试请求
+export interface CrackAttemptRequest {
+  userId: string;
+  username: string;
+  gameId: string;
+  guess: string;
+}
+
+// 破案尝试响应
+export interface CrackAttemptResponse {
+  game: Game;
+  crackResponse: CrackResponse;
+  feedback: string;
 }
