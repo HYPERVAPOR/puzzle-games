@@ -698,7 +698,7 @@ export default function GamePage() {
   const isDefaultRoom = room?.isDefault || false;
 
   return (
-    <div className="flex h-screen bg-zinc-950 overflow-hidden transition-colors duration-300">
+    <div className="flex min-h-screen h-screen bg-zinc-950 overflow-hidden transition-colors duration-300">
       {/* 左侧：在线用户 + 已确认线索（移动端 fixed 定位覆盖，桌面端正常流） */}
       <RightSidebar
         users={game.users}

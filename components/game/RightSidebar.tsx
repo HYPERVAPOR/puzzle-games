@@ -374,7 +374,7 @@ export function RightSidebar({
                                   text-xs font-semibold border border-emerald-500/20">
                         {index + 1}
                       </div>
-                      <p className="flex-1 text-sm text-zinc-300 dark:text-zinc-300 text-zinc-700 leading-relaxed break-words transition-colors duration-300">
+                      <p className="flex-1 text-sm text-zinc-100 dark:text-zinc-100 text-zinc-900 leading-relaxed break-words transition-colors duration-300">
                         {clue}
                       </p>
                       <Check className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
