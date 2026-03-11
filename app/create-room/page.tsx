@@ -52,9 +52,14 @@ export default function CreateRoomPage() {
       const data = await response.json();
 
       if (data.success) {
-        // 保存用户信息到 localStorage
+        // 保存用户信息到 localStorage（完整的用户对象，供游戏页面使用）
+        const user = {
+          id: userId,
+          username: username.trim(),
+          createdAt: new Date().toISOString(),
+        };
+        localStorage.setItem('user', JSON.stringify(user));
         localStorage.setItem('userId', userId);
-        localStorage.setItem('username', username.trim());
         // 保存房间信息到 localStorage（用于分享功能）
         localStorage.setItem('currentRoomId', data.data.room.id);
         localStorage.setItem(`room_${data.data.room.id}_password`, roomPassword.trim());
