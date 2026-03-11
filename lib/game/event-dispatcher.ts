@@ -44,7 +44,7 @@ function sendEvent(connection: SSEConnection, event: ServerEvent): void {
  */
 export function broadcastEvent(event: ServerEvent): void {
   const conns = globalConnections();
-  conns.forEach(connection => {
+  conns.forEach((connection: SSEConnection) => {
     sendEvent(connection, event);
   });
 }
@@ -55,7 +55,7 @@ export function broadcastEvent(event: ServerEvent): void {
 export function broadcastToGame(gameId: string, event: ServerEvent): void {
   const conns = globalConnections();
   let connectionCount = 0;
-  conns.forEach(connection => {
+  conns.forEach((connection: SSEConnection) => {
     if (connection.gameId === gameId) {
       sendEvent(connection, event);
       connectionCount++;
@@ -81,7 +81,7 @@ export function addConnection(
 
   conns.add(connection);
   console.log(`[EventDispatcher] Added SSE connection for game ${gameId}, total connections: ${conns.size}`);
-  console.log(`[EventDispatcher] Current game IDs in pool:`, Array.from(conns).map(c => c.gameId));
+  console.log(`[EventDispatcher] Current game IDs in pool:`, Array.from<SSEConnection>(conns).map(c => c.gameId));
 
   // 返回清理函数
   return () => {
@@ -96,7 +96,7 @@ export function addConnection(
  */
 export function sendHeartbeat(): void {
   const conns = globalConnections();
-  conns.forEach(connection => {
+  conns.forEach((connection: SSEConnection) => {
     try {
       const data = `: heartbeat\n\n`;
       connection.controller.enqueue(new TextEncoder().encode(data));
@@ -145,7 +145,7 @@ export function getConnectionCount(): number {
 export function getGameConnectionCount(gameId: string): number {
   const conns = globalConnections();
   let count = 0;
-  conns.forEach(connection => {
+  conns.forEach((connection: SSEConnection) => {
     if (connection.gameId === gameId) {
       count++;
     }

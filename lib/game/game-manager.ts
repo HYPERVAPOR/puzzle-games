@@ -748,7 +748,7 @@ export async function handleCrackAttempt(
       if (loadedGame) {
         game = loadedGame;
         games.set(gameId, game);
-        await purgeStaleUsers(gameId);
+        await purgeStaleUsers(game);
       }
     } catch (error) {
       console.error(`Failed to load game ${gameId}:`, error);
