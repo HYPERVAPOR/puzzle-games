@@ -11,14 +11,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Lightbulb, ChevronRight, Check, GripVertical } from 'lucide-react';
 import { User } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { SettingsMenu } from './header/SettingsMenu';
 
 interface RightSidebarProps {
   users: User[];
   currentUserId?: string;
   clues: string[];
   roomId: string;
-  theme: 'dark' | 'light';
-  toggleTheme: () => void;
   copied: boolean;
   setCopied: (copied: boolean) => void;
   className?: string;
@@ -91,7 +90,7 @@ function CollapsibleSection({
   );
 }
 
-export function RightSidebar({ users, currentUserId, clues, roomId, theme, toggleTheme, copied, setCopied, className }: RightSidebarProps) {
+export function RightSidebar({ users, currentUserId, clues, roomId, copied, setCopied, className }: RightSidebarProps) {
   const [usersExpanded, setUsersExpanded] = useState(true);
   const [cluesExpanded, setCluesExpanded] = useState(true);
   const [width, setWidth] = useState(DEFAULT_WIDTH);
@@ -103,7 +102,6 @@ export function RightSidebar({ users, currentUserId, clues, roomId, theme, toggl
     const handleMouseMove = (e: MouseEvent) => {
       if (!isResizing || !sidebarRef.current) return;
 
-      const rect = sidebarRef.current.getBoundingClientRect();
       const newWidth = e.clientX;
 
       // 限制宽度范围
@@ -274,17 +272,8 @@ export function RightSidebar({ users, currentUserId, clues, roomId, theme, toggl
         {/* 底端按钮区域 */}
         <div className="mt-auto border-t border-zinc-800/50 dark:border-zinc-800/50 border-zinc-200/50 p-3 transition-colors duration-300">
           <div className="flex gap-2">
-            {/* 设置按钮 */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg hover:bg-zinc-800/50 dark:hover:bg-zinc-800/50 hover:bg-zinc-200/50 text-zinc-400 dark:text-zinc-400 text-zinc-600 hover:text-zinc-300 dark:hover:text-zinc-300 hover:text-zinc-800 transition-colors"
-              title={theme === 'dark' ? '切换到浅色模式' : '切换到深色模式'}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-settings-icon lucide-settings">
-                <path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/>
-                <circle cx="12" cy="12" r="3"/>
-              </svg>
-            </button>
+            {/* 设置按钮（带菜单） */}
+            <SettingsMenu />
 
             {/* 分享按钮 */}
             <button

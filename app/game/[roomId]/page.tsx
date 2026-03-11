@@ -13,14 +13,12 @@ import { ChatInterface } from '@/components/game/ChatInterface';
 import { GameHeader } from '@/components/game/header/GameHeader';
 import { RightSidebar } from '@/components/game/RightSidebar';
 import { Game, Message, User } from '@/lib/types';
-import { useTheme } from '@/lib/theme-context';
 
 export default function GamePage() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
   const roomId = params.roomId as string;
-  const { theme, toggleTheme } = useTheme();
   const [copied, setCopied] = useState(false);
 
   const [game, setGame] = useState<Game | null>(null);
@@ -510,8 +508,6 @@ export default function GamePage() {
         currentUserId={currentUser.id}
         clues={game.publicClues}
         roomId={roomId}
-        theme={theme}
-        toggleTheme={toggleTheme}
         copied={copied}
         setCopied={setCopied}
       />
