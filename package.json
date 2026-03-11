@@ -4,14 +4,29 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:log": "mkdir -p logs && npm run dev 2>&1 | tee \"logs/dev-$(date +%Y%m%d-%H%M%S).log\"",
+    "dev:log-append": "mkdir -p logs && npm run dev 2>&1 | tee -a \"logs/dev-$(date +%Y%m%d).log\"",
+    "dev:bg": "mkdir -p logs && nohup npm run dev > \"logs/dev-$(date +%Y%m%d-%H%M%S).log\" 2>&1 & echo $!",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node test-game.mjs",
+    "test:ai": "node test-ai.mjs",
+    "test:rooms": "node test-rooms.mjs",
+    "test:ip": "node test-ip-identify.mjs"
   },
   "dependencies": {
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "framer-motion": "^12.35.2",
+    "jose": "^6.2.1",
+    "lucide-react": "^0.577.0",
+    "nanoid": "^5.1.6",
     "next": "16.1.6",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "tailwind-merge": "^3.5.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

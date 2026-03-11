@@ -3,24 +3,147 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Modern Dark Theme - Zinc Palette (VSCode/Notion style) */
+  --color-bg-primary: #09090b;      /* zinc-950 */
+  --color-bg-secondary: #18181b;    /* zinc-900 */
+  --color-bg-tertiary: #27272a;     /* zinc-800 */
+  --color-bg-elevated: #18181b;     /* zinc-900 */
+  --color-border: #27272a;          /* zinc-800 */
+  --color-border-subtle: #27272a80; /* zinc-800/50 */
+  --color-text-primary: #fafafa;    /* zinc-50 */
+  --color-text-secondary: #a1a1aa;  /* zinc-400 */
+  --color-text-muted: #71717a;      /* zinc-500 */
+
+  /* Accent Colors - Subtle & Professional */
+  --color-accent: #10b981;          /* emerald-500 (primary) */
+  --color-accent-hover: #34d399;    /* emerald-400 */
+  --color-accent-secondary: #f59e0b; /* amber-500 */
+  --color-success: #10b981;         /* emerald-500 */
+  --color-warning: #f59e0b;         /* amber-500 */
+  --color-error: #f43f5e;           /* rose-500 */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono', 'JetBrains Mono', 'Fira Code', monospace;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #09090b;
+    --foreground: #fafafa;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Modern Scrollbar - Thin & Subtle (Notion style) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 3px;
+  transition: background 150ms ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
+}
+
+/* Glassmorphism Utilities */
+@layer components {
+  .glass {
+    @apply backdrop-blur-md;
+  }
+
+  .glass-header {
+    @apply sticky top-0 z-10 backdrop-blur-md
+           bg-zinc-950/80 border-b border-zinc-800/50;
+  }
+
+  .glass-panel {
+    @apply backdrop-blur-sm bg-zinc-900/50
+           border border-zinc-800/50;
+  }
+
+  .transition-smooth {
+    @apply transition-all duration-200 ease-in-out;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+.animate-pulse-slow {
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Focus States - Modern Ring Effect */
+@layer base {
+  *:focus-visible {
+    @apply outline-none ring-2 ring-emerald-500/20 ring-offset-2 ring-offset-zinc-950;
+  }
+}
+
+/* Typography Improvements */
+.text-balance {
+  text-wrap: balance;
+}
+
+/* Better text rendering for headings */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  letter-spacing: -0.025em;
 }
