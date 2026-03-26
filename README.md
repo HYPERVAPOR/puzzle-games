@@ -1,180 +1,272 @@
-# 🐢 海龟汤 - 情境推理游戏
+<div align="center">
 
-一个现代化的在线多人海龟汤游戏，使用Next.js 16构建，支持实时多人游戏和AI辅助。
+# 🐢 Turtle Soup - Multiplayer Deduction Game
 
-## ✨ 特性
+A modern online multiplayer Turtle Soup (情境推理) game built with Next.js 16, featuring real-time gameplay and AI-powered puzzle generation.
 
-- 🎮 **多人在线** - 支持多玩家同时参与游戏
-- 🤖 **AI辅助** - 集成OpenRouter API，智能判定问题和生成题目
-- 💬 **实时聊天** - 基于SSE的实时通信，类似Telegram的聊天界面
-- 🎨 **深色主题** - 现代化的深色UI设计，美观舒适
-- 🔒 **安全可靠** - 输入验证、防注入攻击、JWT认证
-- 📝 **会话管理** - 类似ChatGPT的会话管理和历史记录
-- 🎯 **智能判定** - AI自动判定游戏结束，揭晓谜底
+[![Next.js](https://img.shields.io/badge/Next.js-16.1-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.2-blue?style=for-the-badge&logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38BDF8?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
-## 🚀 快速开始
+![Banner](assets/banner.png)
 
-### 1. 安装依赖
+</div>
+
+## 📖 Table of Contents
+
+- [✨ Features](#-features)
+- [🎮 Screenshots](#-screenshots)
+- [🚀 Quick Start](#-quick-start)
+- [🎯 How to Play](#-how-to-play)
+- [🏗️ Tech Stack](#️-tech-stack)
+- [📁 Project Structure](#-project-structure)
+- [🔐 Security Features](#-security-features)
+- [📝 API Endpoints](#-api-endpoints)
+- [🚀 Deployment](#-deployment)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
+
+## ✨ Features
+
+- 🎮 **Multiplayer Real-time** - Support multiple players with simultaneous gameplay
+- 🤖 **AI-Powered** - Integrated OpenRouter API for intelligent question judging and puzzle generation
+- 💬 **Real-time Chat** - SSE-based communication with Telegram-inspired chat interface
+- 🎨 **Modern Dark Theme** - Beautiful dark mode UI design
+- 🔒 **Secure & Reliable** - Input validation, injection protection, JWT authentication
+- 📝 **Session Management** - ChatGPT-like session management and conversation history
+- 🎯 **Smart Detection** - AI automatically determines when players have solved the puzzle
+- 📱 **Responsive Design** - Optimized for both desktop and mobile devices
+
+## 🎮 Screenshots
+
+### Desktop View
+![Desktop View](assets/screenshots/Macbook-Air-turtle.puzzlegames.toys.png)
+
+### Mobile View
+<table>
+  <tr>
+    <td><img src="assets/screenshots/iPhone-13-PRO-turtle.puzzlegames.toys.png" alt="Mobile View" width="300"></td>
+    <td><img src="assets/screenshots/iPhone-13-PRO-turtle.puzzlegames.toys-sidebar.png" alt="Mobile Sidebar" width="300"></td>
+  </tr>
+</table>
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn package manager
+
+### 1. Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/yourusername/puzzle-games.git
+cd puzzle-games
+
+# Install dependencies
 npm install
 ```
 
-### 2. 配置环境变量
+### 2. Environment Configuration
 
-创建 `.env.local` 文件：
+Create a `.env.local` file in the root directory:
 
 ```bash
-# 用户口令（默认letmein）
+# Game Access Passcode (default: letmein)
 GAME_PASSCODE=letmein
 
-# 管理员口令
+# Administrator Passcode
 ADMIN_PASSCODE=admin123
 
-# OpenRouter API配置
+# OpenRouter API Configuration
 OPENROUTER_API_KEY=sk-or-v1-your-key-here
 OPENROUTER_JUDGE_MODEL=openai/gpt-4o-mini
 OPENROUTER_GENERATE_MODEL=anthropic/claude-3.5-sonnet
 
-# JWT密钥
+# JWT Secret (generate a secure random string)
 JWT_SECRET=change-this-to-a-secure-random-string
 
-# 数据存储路径
+# Data Storage Path
 DATA_PATH=./data
 ```
 
-### 3. 启动开发服务器
+### 3. Development Server
 
 ```bash
 npm run dev
 ```
 
-打开 [http://localhost:3000](http://localhost:3000) 查看应用。
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### 4. 构建生产版本
+### 4. Production Build
 
 ```bash
+# Build for production
 npm run build
+
+# Start production server
 npm start
 ```
 
-## 🎮 如何游玩
+## 🎯 How to Play
 
-### 用户玩法
+### Player Mode
 
-1. 在首页输入用户名和口令登录
-2. 进入游戏房间，查看谜面（汤面）
-3. 通过提问是/否问题来推理故事
-4. AI会回答"是"/"否"/"不重要"
-5. 所有"是"的问题会显示在"可以公开的情报"区域
-6. 当你推理出足够细节时，AI会判定游戏结束并揭晓谜底
+1. Enter your username and passcode on the home page
+2. Join a game room and read the puzzle scenario (汤面)
+3. Ask yes/no questions to deduce the story
+4. AI responds with "Yes", "No", or "Irrelevant"
+5. All "Yes" answers are displayed in the "Public Information" section
+6. When enough details are discovered, AI determines the game is won and reveals the answer
 
-### 管理员功能
+### Admin Features
 
-访问 `/admin` 进入管理后台：
+Access `/admin` to enter the admin panel:
 
-- **手动创建题目** - 输入谜面和谜底创建新题目
-- **AI生成题目** - 让AI自动生成有趣的海龟汤题目
+- **Manual Puzzle Creation** - Create puzzles by entering scenario and answer
+- **AI-Powered Generation** - Let AI automatically generate interesting Turtle Soup puzzles
 
-## 🏗️ 技术栈
+## 🏗️ Tech Stack
 
-- **框架**: Next.js 16 (App Router)
-- **UI**: React 19 + Tailwind CSS v4
-- **语言**: TypeScript
-- **实时通信**: Server-Sent Events (SSE)
-- **认证**: JWT (jose)
-- **AI**: OpenRouter API
-- **存储**: JSON文件系统
+| Category | Technology |
+|----------|------------|
+| **Framework** | [Next.js 16](https://nextjs.org/) (App Router) |
+| **UI Library** | [React 19](https://react.dev/) |
+| **Styling** | [Tailwind CSS v4](https://tailwindcss.com/) |
+| **Language** | [TypeScript 5.x](https://www.typescriptlang.org/) |
+| **Real-time Communication** | Server-Sent Events (SSE) |
+| **Authentication** | [jose](https://github.com/panva/jose) (JWT) |
+| **AI Integration** | [OpenRouter API](https://openrouter.ai/) |
+| **Storage** | JSON File System |
+| **Icons** | [Lucide React](https://lucide.dev/) |
+| **Animations** | [Framer Motion](https://www.framer.com/motion/) |
+| **Validation** | [Zod](https://zod.dev/) |
 
-## 📁 项目结构
+## 📁 Project Structure
 
 ```
 puzzle-games/
-├── app/                    # Next.js App Router
-│   ├── api/               # API路由
-│   │   ├── auth/          # 认证
-│   │   ├── game/          # 游戏API
-│   │   ├── admin/         # 管理员API
-│   │   └── sessions/      # 会话API
-│   ├── game/              # 游戏页面
-│   ├── admin/             # 管理员页面
-│   └── page.tsx           # 登录页面
-├── components/            # React组件
-│   ├── game/              # 游戏组件
-│   ├── admin/             # 管理员组件
-│   └── ui/                # 基础UI组件
-├── lib/                   # 核心逻辑
-│   ├── game/              # 游戏管理
-│   ├── storage/           # 数据存储
-│   ├── validation/        # 输入验证
-│   └── types.ts           # TypeScript类型
-└── data/                  # 数据存储目录
+├── app/                          # Next.js App Router
+│   ├── api/                      # API Routes
+│   │   ├── auth/                 # Authentication endpoints
+│   │   ├── game/                 # Game API endpoints
+│   │   ├── admin/                # Admin API endpoints
+│   │   └── sessions/             # Session management
+│   ├── game/                     # Game pages
+│   ├── admin/                    # Admin pages
+│   └── page.tsx                  # Login page
+├── components/                   # React Components
+│   ├── game/                     # Game-specific components
+│   ├── admin/                    # Admin components
+│   └── ui/                       # Reusable UI components
+├── lib/                          # Core Logic
+│   ├── game/                     # Game management
+│   ├── storage/                  # Data persistence
+│   ├── validation/               # Input validation schemas
+│   └── types.ts                  # TypeScript type definitions
+├── data/                         # Data storage directory
+└── assets/                       # Static assets
+    ├── banner.png
+    └── screenshots/
 ```
 
-## 🔐 安全特性
+## 🔐 Security Features
 
-- ✅ HTML转义防止XSS攻击
-- ✅ 输入长度限制
-- ✅ 用户名格式验证
-- ✅ JWT token认证
-- ✅ 速率限制防止滥用
-- ✅ 安全响应头
+- ✅ HTML escaping to prevent XSS attacks
+- ✅ Input length limits
+- ✅ Username format validation
+- ✅ JWT token authentication
+- ✅ Rate limiting to prevent abuse
+- ✅ Security response headers
+- ✅ Injection attack prevention
 
-## 🎯 游戏规则
+## 📝 API Endpoints
 
-1. **提问**: 玩家通过提问是/否问题来推理故事
-2. **判定**: AI根据谜底判定问题的答案
-3. **情报**: 所有"是"的回答会被记录在公开情报区
-4. **胜利**: 当推理出足够细节时，游戏结束，揭晓谜底
+### Authentication
+- `POST /api/auth/login` - User login and token generation
 
-## 📝 API端点
+### Game
+- `POST /api/game/join` - Join a game session
+- `POST /api/game/message` - Send game messages
+- `POST /api/game/leave` - Leave current game
+- `GET /api/game/events` - SSE event stream for real-time updates
 
-### 认证
-- `POST /api/auth/login` - 用户登录
+### Admin
+- `POST /api/admin/create-puzzle` - Manually create a puzzle
+- `POST /api/admin/generate-puzzle` - AI-powered puzzle generation
 
-### 游戏
-- `POST /api/game/join` - 加入游戏
-- `POST /api/game/message` - 发送消息
-- `POST /api/game/leave` - 离开游戏
-- `GET /api/game/events` - SSE事件流
+### Sessions
+- `GET /api/sessions` - List all game sessions
+- `POST /api/sessions` - Create a new session
+- `GET /api/sessions/[id]` - Get session details
 
-### 管理员
-- `POST /api/admin/create-puzzle` - 创建题目
-- `POST /api/admin/generate-puzzle` - AI生成题目
+## 🚀 Deployment
 
-### 会话
-- `GET /api/sessions` - 获取会话列表
-- `POST /api/sessions` - 创建会话
-- `GET /api/sessions/[id]` - 获取会话详情
+### Vercel Deployment (Recommended)
 
-## 🚀 部署
+1. Fork this repository
+2. Import project in [Vercel](https://vercel.com)
+3. Configure environment variables
+4. Deploy!
 
-### Vercel部署
+### Other Platforms
 
-1. Fork本项目
-2. 在Vercel中导入项目
-3. 配置环境变量
-4. 部署！
+Ensure the platform supports:
+- Node.js 18+ runtime
+- File system write permissions
+- Environment variable configuration
+- Server-Sent Events (SSE) support
 
-### 其他平台
+### Environment Variables for Production
 
-确保平台支持：
-- Node.js 18+
-- 文件系统写入权限
-- 环境变量配置
+```bash
+GAME_PASSCODE=your-secure-passcode
+ADMIN_PASSCODE=your-admin-passcode
+OPENROUTER_API_KEY=sk-or-v1-your-key
+OPENROUTER_JUDGE_MODEL=openai/gpt-4o-mini
+OPENROUTER_GENERATE_MODEL=anthropic/claude-3.5-sonnet
+JWT_SECRET=your-jwt-secret-min-32-chars
+DATA_PATH=/var/data
+```
 
-## 📄 许可证
+## 🤝 Contributing
 
-MIT License
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-## 🤝 贡献
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-欢迎提交Issue和Pull Request！
+## 📄 License
 
-## 📞 联系
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-如有问题，请提交Issue或联系开发者。
+## 🙏 Acknowledgments
+
+- Built with [Next.js](https://nextjs.org/)
+- AI powered by [OpenRouter](https://openrouter.ai/)
+- Inspired by the classic Turtle Soup deduction game
 
 ---
 
-**祝游戏愉快！🎉**
+<div align="center">
+
+## 👤 Author
+
+**HYPERVAPOR**
+
+## 📞 Contact
+
+- 📧 **Email:** [me@hypervapor.org](mailto:me@hypervapor.org)
+- 💼 **LinkedIn:** [Zhening Liu](https://linkedin.com/in/zhening-liu-0a2b79364)
+- 🌐 **Website:** [hypervapor.org](https://hypervapor.org)
+- 💻 **GitHub:** [HYPERVAPOR](https://github.com/HYPERVAPOR)
+
+**🎉 Enjoy the game!**
+
+</div>
